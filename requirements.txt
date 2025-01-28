@@ -1,0 +1,6 @@
+praw
+pandas
+jupyter
+papermill
+numpy  
+datetime
