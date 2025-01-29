@@ -71,6 +71,11 @@ instance/
 # Sphinx documentation
 docs/_build/
 
+# Reddit Zugang
+zugang_reddit.env
+
+
+
 # PyBuilder
 .pybuilder/
 target/
