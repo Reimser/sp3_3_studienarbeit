@@ -1,13 +1,6 @@
 praw
 pandas
-jupyter
-papermill
-numpy  
-datetime
-
-google-api-python-client
-google-auth
-google-auth-httplib2
-google-auth-oauthlib
-
-gdown
+psaw
+python-dotenv
+torch
+transformers
