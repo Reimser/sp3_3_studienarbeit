@@ -2,12 +2,17 @@ import streamlit as st
 import pandas as pd
 import os
 
-# 📌 Google Drive Pfad (ersetzen durch deinen Drive-Pfad)
+# Google Drive Pfad zu deinem Ordner
 DRIVE_PATH = "/content/drive/My Drive/reddit/"
 
 # Datei-Pfade für CSVs
-POSTS_CSV = os.path.join(DRIVE_PATH, "reddit_posts.csv")
-COMMENTS_CSV = os.path.join(DRIVE_PATH, "reddit_comments.csv")
+POSTS_CSV = DRIVE_PATH + "reddit_posts.csv"
+COMMENTS_CSV = DRIVE_PATH + "reddit_comments.csv"
+
+# Prüfe, ob die Dateien existieren (Fehlersuche)
+import os
+print("Posts existiert?", os.path.exists(POSTS_CSV))
+print("Comments existiert?", os.path.exists(COMMENTS_CSV))
 
 # 📌 Laden der Daten mit Caching für bessere Performance
 @st.cache_data
