@@ -4,3 +4,8 @@ psaw
 python-dotenv
 torch
 transformers
+streamlit
+pandas
+matplotlib
+seaborn
+plotly
