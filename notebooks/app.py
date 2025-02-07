@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 # 📌 Google Drive Pfad (ersetzen durch deinen Drive-Pfad)
-DRIVE_PATH = "/content/drive/My Drive/reddit_data/"
+DRIVE_PATH = "/content/drive/My Drive/reddit/"
 
 # Datei-Pfade für CSVs
 POSTS_CSV = os.path.join(DRIVE_PATH, "reddit_posts.csv")
