@@ -26,7 +26,13 @@ def load_data():
     df_merged = pd.read_csv(MERGED_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
     # 🔹 Sicherstellen, dass `date` im richtigen Format ist
-    df_merged["date"] = pd.to_datetime(df_merged["date"])
+    if "date_x" in df_merged.columns:
+        df_merged["date"] = pd.to_datetime(df_merged["date_x"])
+    elif "date_y" in df_merged.columns:
+        df_merged["date"] = pd.to_datetime(df_merged["date_y"])
+    else:
+        st.error("⚠️ Keine gültige 'date'-Spalte gefunden!")
+
 
     return df_merged
 
