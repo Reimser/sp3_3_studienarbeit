@@ -1,4 +1,11 @@
 +----------------------+
+|  Git-Repo Setup |
+|  - oeffentlich     |
+|  - Token fuer jenkins erstellen   |
++----------------------+
+         │
+         ▼
++----------------------+
 |  Reddit API Setup |
 |  - App erstellen     |
 |  - Client ID holen   |
@@ -16,7 +23,8 @@
 |  Datenbereinigung |
 |  - Duplikate filtern |
 |  - Bots entfernen   |
-|  - Fehlende Werte   |
+|  - Fehlende Werte 
+    normalisieren   |
 +----------------------+
          │
          ▼
@@ -24,6 +32,13 @@
 |  Sentiment Analyse |
 |  - Modell anwenden  |
 |  - Positiv/Negativ  |
++----------------------+
+         │
+         ▼
+
++----------------------+
+|   mergen fuer Analyse  |
+|                        |
 +----------------------+
          │
          ▼
@@ -42,7 +57,8 @@
          │
          ▼
 +----------------------+
-|  Analyse & Dashboard |
+|  Analyse & Dashboard mit streamline|
 |  - Sentiment-Trends    |
 |  - Krypto-Visualisierung |
+    - woechenliche Updates |
 +----------------------+
