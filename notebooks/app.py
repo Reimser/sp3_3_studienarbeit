@@ -19,8 +19,17 @@ def load_data():
     # 🔹 Fehlende Werte entfernen (optional)
     df_merged.dropna(inplace=True)
 
-    # 🔹 Sicherstellen, dass `date` im richtigen Format ist
-    df_merged["date"] = pd.to_datetime(df_merged["date"])
+    # Überprüfe, welche Date-Spalten nach dem Merge existieren
+    if "date_x" in df_merged.columns:
+        df_merged["date"] = pd.to_datetime(df_merged["date_x"])  # Falls aus df_posts
+    elif "date_y" in df_merged.columns:
+        df_merged["date"] = pd.to_datetime(df_merged["date_y"])  # Falls aus df_comments
+    else:
+        raise KeyError("⚠️ Keine gültige 'date'-Spalte gefunden!")
+
+    # Unnötige Spalten entfernen
+    df_merged.drop(columns=["date_x", "date_y"], errors="ignore", inplace=True)
+
 
     return df_merged
 
