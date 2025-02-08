@@ -3,7 +3,7 @@ import pandas as pd
 import gdown
 import os
 
-# 📌 Google Drive Direkt-Link für die CSV-Datei (ersetze mit deiner File-ID)
+# 📌 Google Drive Direkt-Link (ersetze mit deiner File-ID)
 MERGED_CSV_ID = "102W-f_u58Jvx9xBAv4IaYrOY6txk-XKL"
 
 # 📌 Lokale Datei für die heruntergeladene CSV
@@ -15,23 +15,17 @@ def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
+# 📌 Funktion zum Laden der Daten
 @st.cache_data
 def load_data():
+    # 🔹 CSV herunterladen, falls nicht vorhanden
     if not os.path.exists(MERGED_CSV):
         download_csv(MERGED_CSV_ID, MERGED_CSV)
 
+    # 🔹 CSV einlesen
     df = pd.read_csv(MERGED_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # 🔹 Überprüfen, ob "date" vorhanden ist
-    if "date" not in df.columns:
-        if "date_x" in df.columns:
-            df["date"] = df["date_x"]
-        elif "date_y" in df.columns:
-            df["date"] = df["date_y"]
-        else:
-            raise KeyError("⚠️ Keine gültige 'date'-Spalte gefunden! Überprüfe die CSV.")
-
-    # 🔹 Konvertiere das Datum
+    # 🔹 Datumsformat korrigieren
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
     return df
@@ -46,43 +40,30 @@ st.title("📊 Krypto-Sentiment Dashboard")
 if df_merged.empty:
     st.warning("⚠️ Keine Daten verfügbar. Überprüfe Google Drive oder lade neue Daten hoch.")
 else:
-    # 🔹 **GRID-Layout für 4 Visualisierungen**
-    col1, col2 = st.columns(2)  # Erste Zeile mit 2 Charts
-    col3, col4 = st.columns(2)  # Zweite Zeile mit 2 Charts
+    # 🔹 1️⃣ Häufig diskutierte Coins
+    st.subheader("Top 10 meist erwähnte Kryptowährungen")
+    crypto_counts = df_merged["crypto"].value_counts().head(10)
+    st.bar_chart(crypto_counts)
 
-    # 🔹 **1️⃣ Häufig diskutierte Coins**
-    with col1:
-        st.subheader("🔥 Top 10 meist erwähnte Kryptowährungen")
-        crypto_counts = df_merged["crypto"].value_counts().head(10)
-        st.bar_chart(crypto_counts)
+    # 🔹 2️⃣ Sentiment-Analyse pro Coin
+    st.subheader("Sentiment-Verteilung pro Kryptowährung")
+    sentiment_distribution = df_merged.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
+    st.bar_chart(sentiment_distribution)
 
-    # 🔹 **2️⃣ Sentiment-Verteilung pro Coin**
-    with col2:
-        st.subheader("💡 Sentiment-Verteilung der Coins")
-        sentiment_distribution = df_merged.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
-        st.bar_chart(sentiment_distribution)
+    # 🔹 3️⃣ **Interaktive Sentiment-Entwicklung**
+    st.subheader("📅 Sentiment-Entwicklung über die Zeit")
 
-    # 🔹 **3️⃣ Verhältnis Positiv vs. Negativ**
-    with col3:
-        st.subheader("📈 Verhältnis Positiv vs. Negativ")
-        sentiment_ratio = df_merged[df_merged["sentiment"] != "neutral"].groupby("sentiment").size()
-        st.pie_chart(sentiment_ratio)
+    # **Dropdown-Menü für Kryptowährungsauswahl**
+    crypto_options = df_merged["crypto"].unique().tolist()
+    selected_crypto = st.selectbox("Wähle eine Kryptowährung:", crypto_options, index=0)
 
-    # 🔹 **4️⃣ Interaktive Sentiment-Entwicklung**
-    with col4:
-        st.subheader("📅 Sentiment-Entwicklung über Zeit")
+    # **Daten für gewählte Kryptowährung filtern**
+    df_filtered = df_merged[df_merged["crypto"] == selected_crypto]
 
-        # **Dropdown-Menü für Krypto-Auswahl**
-        crypto_options = df_merged["crypto"].unique().tolist()
-        selected_crypto = st.selectbox("Wähle eine Kryptowährung:", crypto_options, index=0)
+    # **Sentiment aggregieren**
+    df_time = df_filtered.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
 
-        # **Nur gewählte Krypto & ohne neutrales Sentiment**
-        df_filtered = df_merged[(df_merged["crypto"] == selected_crypto) & (df_merged["sentiment"] != "neutral")]
-
-        # **Sentiment aggregieren**
-        df_time = df_filtered.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
-
-        # **Interaktive Liniendiagramm-Visualisierung**
-        st.line_chart(df_time)
+    # **Interaktive Liniendiagramm-Visualisierung**
+    st.line_chart(df_time)
 
     st.write("🔄 Dashboard wird regelmäßig mit neuen Daten aktualisiert!")
