@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import gdown
 import os
+import matplotlib.pyplot as plt
 
 # 📌 Google Drive Direkt-Link für die CSV-Datei (ersetze mit deiner File-ID)
 MERGED_CSV_ID = "102W-f_u58Jvx9xBAv4IaYrOY6txk-XKL"
@@ -62,11 +63,24 @@ else:
         sentiment_distribution = df_merged.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
         st.bar_chart(sentiment_distribution)
 
-    # 🔹 **3️⃣ Verhältnis Positiv vs. Negativ**
+    # 🔹 **3️⃣ Verhältnis Positiv vs. Negativ (Matplotlib Pie-Chart)**
     with col3:
         st.subheader("📈 Verhältnis Positiv vs. Negativ")
+
+        # Entferne neutrale Werte
         sentiment_ratio = df_merged[df_merged["sentiment"] != "neutral"].groupby("sentiment").size()
-        st.pie_chart(sentiment_ratio)
+
+        # **Pie-Chart mit Matplotlib**
+        fig, ax = plt.subplots()
+        ax.pie(
+            sentiment_ratio, 
+            labels=sentiment_ratio.index, 
+            autopct="%1.1f%%", 
+            startangle=90, 
+            colors=["green", "red"]
+        )
+        ax.axis("equal")  # Kreisförmige Darstellung
+        st.pyplot(fig)  # **Streamlit Pie-Chart anzeigen**
 
     # 🔹 **4️⃣ Interaktive Sentiment-Entwicklung**
     with col4:
