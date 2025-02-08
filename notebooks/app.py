@@ -4,8 +4,6 @@ import gdown
 import os
 import matplotlib.pyplot as plt
 
-# 📌 Maximale Breite aktivieren
-st.set_page_config(layout="wide")
 
 # 📌 Google Drive Direkt-Link für die CSV-Datei (ersetze mit deiner File-ID)
 MERGED_CSV_ID = "102W-f_u58Jvx9xBAv4IaYrOY6txk-XKL"
