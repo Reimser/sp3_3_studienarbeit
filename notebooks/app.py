@@ -3,7 +3,7 @@ import pandas as pd
 import gdown
 import os
 
-# 📌 Google Drive Direkt-Link (ersetze mit deinem File-ID)
+# 📌 Google Drive Direkt-Link (ersetze mit deiner File-ID)
 MERGED_CSV_ID = "102W-f_u58Jvx9xBAv4IaYrOY6txk-XKL"
 
 # 📌 Lokale Datei für die heruntergeladene CSV
@@ -23,18 +23,12 @@ def load_data():
         download_csv(MERGED_CSV_ID, MERGED_CSV)
 
     # 🔹 CSV einlesen
-    df_merged = pd.read_csv(MERGED_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
+    df = pd.read_csv(MERGED_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # 🔹 Sicherstellen, dass `date` im richtigen Format ist
-    if "date_x" in df_merged.columns:
-        df_merged["date"] = pd.to_datetime(df_merged["date_x"])
-    elif "date_y" in df_merged.columns:
-        df_merged["date"] = pd.to_datetime(df_merged["date_y"])
-    else:
-        st.error("⚠️ Keine gültige 'date'-Spalte gefunden!")
+    # 🔹 Datumsformat korrigieren
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
-
-    return df_merged
+    return df
 
 # 📌 Daten laden
 df_merged = load_data()
@@ -56,9 +50,20 @@ else:
     sentiment_distribution = df_merged.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
     st.bar_chart(sentiment_distribution)
 
-    # 🔹 3️⃣ Sentiment-Entwicklung über die Zeit
+    # 🔹 3️⃣ **Interaktive Sentiment-Entwicklung**
     st.subheader("📅 Sentiment-Entwicklung über die Zeit")
-    df_time = df_merged.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
+
+    # **Dropdown-Menü für Kryptowährungsauswahl**
+    crypto_options = df_merged["crypto"].unique().tolist()
+    selected_crypto = st.selectbox("Wähle eine Kryptowährung:", crypto_options, index=0)
+
+    # **Daten für gewählte Kryptowährung filtern**
+    df_filtered = df_merged[df_merged["crypto"] == selected_crypto]
+
+    # **Sentiment aggregieren**
+    df_time = df_filtered.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
+
+    # **Interaktive Liniendiagramm-Visualisierung**
     st.line_chart(df_time)
 
     st.write("🔄 Dashboard wird regelmäßig mit neuen Daten aktualisiert!")
