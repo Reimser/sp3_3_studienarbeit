@@ -3,6 +3,10 @@ import pandas as pd
 import gdown
 import os
 
+
+st.set_page_config(layout="centered")
+
+
 # 📌 Google Drive Direkt-Link für die CSV-Datei (ersetze mit deiner File-ID)
 MERGED_CSV_ID = "102W-f_u58Jvx9xBAv4IaYrOY6txk-XKL"
 
@@ -39,8 +43,6 @@ df_merged = load_data()
 
 # 📊 Dashboard Titel
 st.title("📊 Krypto-Sentiment Dashboard")
-
-st.set_page_config(layout="centered")
 
 if df_merged.empty:
     st.warning("⚠️ Keine Daten verfügbar. Überprüfe Google Drive oder lade neue Daten hoch.")
