@@ -2,14 +2,14 @@ import streamlit as st
 import pandas as pd
 import gdown
 import os
+import matplotlib.pyplot as plt
 
-# 📌 Google Drive Direkt-Link für die CSV-Datei (ersetze mit deiner File-ID)
+# 📌 Google Drive Direkt-Link (ersetze mit deiner File-ID)
 MERGED_CSV_ID = "102W-f_u58Jvx9xBAv4IaYrOY6txk-XKL"
 
 # 📌 Lokale Datei für die heruntergeladene CSV
 MERGED_CSV = "reddit_merged.csv"
 
-# 📌 Funktion zum Herunterladen der Datei aus Google Drive
 @st.cache_data
 def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
@@ -31,10 +31,10 @@ def load_data():
         else:
             raise KeyError("⚠️ Keine gültige 'date'-Spalte gefunden! Überprüfe die CSV.")
 
-    # 🔹 Konvertiere das Datum
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
     return df
+
 
 # 📌 Daten laden
 df_merged = load_data()
@@ -46,43 +46,52 @@ st.title("📊 Krypto-Sentiment Dashboard")
 if df_merged.empty:
     st.warning("⚠️ Keine Daten verfügbar. Überprüfe Google Drive oder lade neue Daten hoch.")
 else:
-    # 🔹 **GRID-Layout für 4 Visualisierungen**
-    col1, col2 = st.columns(2)  # Erste Zeile mit 2 Charts
-    col3, col4 = st.columns(2)  # Zweite Zeile mit 2 Charts
+    # ➖➖➖ **Erste Reihe: Meist erwähnte Coins & Sentiment-Verteilung** ➖➖➖
+    col1, col2 = st.columns(2)
 
-    # 🔹 **1️⃣ Häufig diskutierte Coins**
     with col1:
-        st.subheader("🔥 Top 10 meist erwähnte Kryptowährungen")
+        st.subheader("🔥 Meist erwähnte Kryptowährungen")
         crypto_counts = df_merged["crypto"].value_counts().head(10)
-        st.bar_chart(crypto_counts)
+        
+        fig, ax = plt.subplots(figsize=(5,3))
+        crypto_counts.plot(kind="bar", ax=ax, color="blue")
+        ax.set_ylabel("Anzahl")
+        ax.set_xlabel("Kryptowährung")
+        st.pyplot(fig)
 
-    # 🔹 **2️⃣ Sentiment-Verteilung pro Coin**
     with col2:
-        st.subheader("💡 Sentiment-Verteilung der Coins")
+        st.subheader("💡 Sentiment-Verteilung pro Coin")
         sentiment_distribution = df_merged.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
-        st.bar_chart(sentiment_distribution)
+        
+        fig, ax = plt.subplots(figsize=(5,3))
+        sentiment_distribution.plot(kind="bar", stacked=True, ax=ax, colormap="coolwarm")
+        ax.set_ylabel("Anzahl")
+        st.pyplot(fig)
 
-    # 🔹 **3️⃣ Verhältnis Positiv vs. Negativ**
+    # ➖➖➖ **Zweite Reihe: Verhältnis Positiv/Negativ & Sentiment-Entwicklung** ➖➖➖
+    col3, col4 = st.columns(2)
+
     with col3:
         st.subheader("📈 Verhältnis Positiv vs. Negativ")
         sentiment_ratio = df_merged[df_merged["sentiment"] != "neutral"].groupby("sentiment").size()
-        st.pie_chart(sentiment_ratio)
+        
+        fig, ax = plt.subplots(figsize=(5,3))
+        ax.pie(sentiment_ratio, labels=sentiment_ratio.index, autopct="%1.1f%%", startangle=90, colors=["green", "red"])
+        ax.axis("equal")
+        st.pyplot(fig)
 
-    # 🔹 **4️⃣ Interaktive Sentiment-Entwicklung**
     with col4:
-        st.subheader("📅 Sentiment-Entwicklung über Zeit")
-
-        # **Dropdown-Menü für Krypto-Auswahl**
+        st.subheader("📅 Sentiment-Entwicklung")
         crypto_options = df_merged["crypto"].unique().tolist()
         selected_crypto = st.selectbox("Wähle eine Kryptowährung:", crypto_options, index=0)
-
-        # **Nur gewählte Krypto & ohne neutrales Sentiment**
+        
         df_filtered = df_merged[(df_merged["crypto"] == selected_crypto) & (df_merged["sentiment"] != "neutral")]
-
-        # **Sentiment aggregieren**
         df_time = df_filtered.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
-
-        # **Interaktive Liniendiagramm-Visualisierung**
-        st.line_chart(df_time)
+        
+        fig, ax = plt.subplots(figsize=(5,3))
+        df_time.plot(ax=ax)
+        ax.set_ylabel("Anzahl")
+        ax.set_xlabel("Datum")
+        st.pyplot(fig)
 
     st.write("🔄 Dashboard wird regelmäßig mit neuen Daten aktualisiert!")
