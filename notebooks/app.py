@@ -40,6 +40,8 @@ df_merged = load_data()
 # 📊 Dashboard Titel
 st.title("📊 Krypto-Sentiment Dashboard")
 
+st.set_page_config(layout="centered")
+
 if df_merged.empty:
     st.warning("⚠️ Keine Daten verfügbar. Überprüfe Google Drive oder lade neue Daten hoch.")
 else:
