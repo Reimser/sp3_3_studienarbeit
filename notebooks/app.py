@@ -15,20 +15,27 @@ def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
-# 📌 Funktion zum Laden der Daten
 @st.cache_data
 def load_data():
-    # 🔹 CSV herunterladen, falls nicht vorhanden
     if not os.path.exists(MERGED_CSV):
         download_csv(MERGED_CSV_ID, MERGED_CSV)
 
-    # 🔹 CSV einlesen
     df = pd.read_csv(MERGED_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # 🔹 Datumsformat korrigieren
+    # 🔹 Überprüfen, ob "date" vorhanden ist
+    if "date" not in df.columns:
+        if "date_x" in df.columns:
+            df["date"] = df["date_x"]
+        elif "date_y" in df.columns:
+            df["date"] = df["date_y"]
+        else:
+            raise KeyError("⚠️ Keine gültige 'date'-Spalte gefunden! Überprüfe die CSV.")
+
+    # 🔹 Konvertiere das Datum
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
     return df
+
 
 # 📌 Daten laden
 df_merged = load_data()
