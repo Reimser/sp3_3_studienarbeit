@@ -19,7 +19,7 @@ MERGED_STOCK_CSV = "stock_data.csv"
 # 🔹 Function to Download CSV from Google Drive
 @st.cache_data
 def download_csv(file_id, output):
-    url = f"https://drive.google.com/uc?id={file_id}"
+    url = f"https://drive.google.com/uc?export=download&id={file_id}"
     gdown.download(url, output, quiet=False)
 
 # 🔹 Function to Load Data
@@ -30,10 +30,8 @@ def load_data():
         download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
     df_crypto = pd.read_csv(MERGED_CRYPTO_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # 🔹 Load Stock Data
-    if not os.path.exists(MERGED_STOCK_CSV):
-        download_csv(MERGED_STOCK_CSV_ID, MERGED_STOCK_CSV)
-    df_stock = pd.read_csv(MERGED_STOCK_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
+    # 🔹 Load Stock Data (Placeholder - No Data Yet)
+    df_stock = None  # No stock data available yet
 
     return df_crypto, df_stock
 
@@ -41,15 +39,15 @@ def load_data():
 df_crypto, df_stock = load_data()
 
 # 📊 **Multi-Tab Navigation**
-tab_home, tab_crypto, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💹 Stock Data"])
+tab_home, tab_crypto, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "🚧 Stock Data (Coming Soon)"])
 
 # 🔹 **🏠 HOME (README)**
 with tab_home:
-    st.title("📊 Reims Crypto Scraper!")
+    st.title("📊 Reims Financial Dashboard!")
     st.markdown("""
         **This dashboard provides insights into financial data on Reddit:**
         - 📈 **Cryptocurrencies:** Sentiment Analysis, Activity & Trends  
-        - 💹 **Stock Market:** Price Trends, Volatility & Market Analysis  
+        - 🚧 **Stock Market:** *(Coming Soon!)*  
         
         Use the tabs to explore different datasets!  
         """)
@@ -78,24 +76,10 @@ with tab_crypto:
 
         st.line_chart(df_time)
 
-# 🔹 **💹 STOCK MARKET ANALYSIS**
+# 🔹 **🚧 STOCK MARKET ANALYSIS (COMING SOON)**
 with tab_stocks:
-    st.title("💹 Stock Market Analysis")
-
-    if df_stock.empty:
-        st.warning("⚠️ No Stock Data Available.")
-    else:
-        st.subheader("📊 Top Performing Stocks")
-        stock_counts = df_stock["stock"].value_counts().head(10)
-        st.bar_chart(stock_counts)
-
-        st.subheader("📈 Stock Price Trends")
-        stock_options = df_stock["stock"].unique().tolist()
-        selected_stock = st.selectbox("Choose a Stock:", stock_options, index=0)
-        
-        df_stock_filtered = df_stock[df_stock["stock"] == selected_stock]
-        df_price_time = df_stock_filtered.groupby(["date"])["price"].mean()
-
-        st.line_chart(df_price_time)
+    st.title("🚧 Stock Market Analysis - Coming Soon!")
+    
+    st.info("The stock market analysis feature is under construction. Data sources and analytics will be integrated soon. Stay tuned! 📊")
 
     st.write("🔄 Dashboard is regularly updated with new data!")
