@@ -19,7 +19,7 @@ MERGED_STOCK_CSV = "stock_data.csv"
 # 🔹 Function to Download CSV from Google Drive
 @st.cache_data
 def download_csv(file_id, output):
-    url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
 # 🔹 Function to Load Data
@@ -30,8 +30,8 @@ def load_data():
         download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
     df_crypto = pd.read_csv(MERGED_CRYPTO_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # 🔹 Load Stock Data (Placeholder - No Data Yet)
-    df_stock = None  # No stock data available yet
+    # 🔹 Load Stock Data (Currently under construction)
+    df_stock = None  # No actual data yet
 
     return df_crypto, df_stock
 
@@ -39,18 +39,20 @@ def load_data():
 df_crypto, df_stock = load_data()
 
 # 📊 **Multi-Tab Navigation**
-tab_home, tab_crypto, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "🚧 Stock Data (Coming Soon)"])
+tab_home, tab_crypto, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💹 Stock Data"])
 
 # 🔹 **🏠 HOME (README)**
 with tab_home:
-    st.title("📊 Reims Financial Dashboard!")
+    st.title("📊 Reims Financial Data Dashboard")
     st.markdown("""
-        **This dashboard provides insights into financial data on Reddit:**
-        - 📈 **Cryptocurrencies:** Sentiment Analysis, Activity & Trends  
-        - 🚧 **Stock Market:** *(Coming Soon!)*  
+        **Welcome to the Reims Financial Data Dashboard!**  
+        This platform provides insights into financial discussions on Reddit.  
         
-        Use the tabs to explore different datasets!  
-        """)
+        - 📈 **Crypto Data:** Sentiment Analysis, Activity & Trends  
+        - 💹 **Stock Market (Coming Soon):** Price Trends, Volatility & Market Analysis  
+        
+        Use the tabs above to navigate through different datasets.  
+    """)
 
 # 🔹 **📈 CRYPTOCURRENCY ANALYSIS**
 with tab_crypto:
@@ -76,10 +78,15 @@ with tab_crypto:
 
         st.line_chart(df_time)
 
-# 🔹 **🚧 STOCK MARKET ANALYSIS (COMING SOON)**
+# 🔹 **💹 STOCK MARKET ANALYSIS (UNDER CONSTRUCTION)**
 with tab_stocks:
-    st.title("🚧 Stock Market Analysis - Coming Soon!")
-    
-    st.info("The stock market analysis feature is under construction. Data sources and analytics will be integrated soon. Stay tuned! 📊")
+    st.title("💹 Stock Market Analysis (🚧 Under Construction)")
 
-    st.write("🔄 Dashboard is regularly updated with new data!")
+    st.info(
+        """
+        🚀 The stock market analysis dashboard is currently being developed!  
+        Soon, you'll be able to explore stock trends, sentiment analysis, and market activity.
+        
+        Stay tuned for updates! 📢
+        """
+    )
