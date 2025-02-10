@@ -44,7 +44,7 @@ def load_crypto_data():
 # 📌 **Refresh Button**
 if st.button("🔄 Refresh Data"):
     st.cache_data.clear()  # Clears the cache
-    st.experimental_rerun()  # Forces Streamlit to reload the script
+    st.rerun()  # Forces Streamlit to reload the script
 
 # 📌 Load Crypto Data
 df_crypto = load_crypto_data()
