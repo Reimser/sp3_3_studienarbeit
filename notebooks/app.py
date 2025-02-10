@@ -20,11 +20,11 @@ def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
-# 🔹 Function to Load Crypto Data
 def load_crypto_data():
-    if not os.path.exists(MERGED_CRYPTO_CSV):
-        download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
+    download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)  # Zwingt Streamlit, die Datei neu zu holen
     df_crypto = pd.read_csv(MERGED_CRYPTO_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
+    return df_crypto
+
 
     # Ensure the "date" column exists
     if "date" not in df_crypto.columns:
