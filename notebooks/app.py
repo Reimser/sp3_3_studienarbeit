@@ -5,125 +5,97 @@ import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# 📌 Streamlit-Konfiguration für zentriertes Layout
-st.set_page_config(page_title="Krypto-Sentiment Dashboard", layout="centered")
+# 📌 Streamlit Page Configuration
+st.set_page_config(page_title="Financial Data Dashboard", layout="centered")
 
-# 📌 Google Drive Direkt-Link für die CSV-Datei (ersetze mit deiner File-ID)
-MERGED_CSV_ID = "102W-f_u58Jvx9xBAv4IaYrOY6txk-XKL"
+# 📌 Google Drive Direct Links (Replace with your File IDs)
+MERGED_CRYPTO_CSV_ID = "102W-f_u58Jvx9xBAv4IaYrOY6txk-XKL"
+MERGED_STOCK_CSV_ID = "YOUR-STOCK-DATA-FILE-ID"
 
-# 📌 Lokale Datei für die heruntergeladene CSV
-MERGED_CSV = "reddit_merged.csv"
+# 📌 Local File Paths for Downloaded CSVs
+MERGED_CRYPTO_CSV = "reddit_merged_crypto.csv"
+MERGED_STOCK_CSV = "stock_data.csv"
 
+# 🔹 Function to Download CSV from Google Drive
 @st.cache_data
 def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
+# 🔹 Function to Load Data
 @st.cache_data
 def load_data():
-    if not os.path.exists(MERGED_CSV):
-        download_csv(MERGED_CSV_ID, MERGED_CSV)
+    # 🔹 Load Crypto Data
+    if not os.path.exists(MERGED_CRYPTO_CSV):
+        download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
+    df_crypto = pd.read_csv(MERGED_CRYPTO_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    df = pd.read_csv(MERGED_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
+    # 🔹 Load Stock Data
+    if not os.path.exists(MERGED_STOCK_CSV):
+        download_csv(MERGED_STOCK_CSV_ID, MERGED_STOCK_CSV)
+    df_stock = pd.read_csv(MERGED_STOCK_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # 🔹 Überprüfen, ob "date" vorhanden ist
-    if "date" not in df.columns:
-        if "date_x" in df.columns:
-            df["date"] = df["date_x"]
-        elif "date_y" in df.columns:
-            df["date"] = df["date_y"]
-        else:
-            raise KeyError("⚠️ Keine gültige 'date'-Spalte gefunden! Überprüfe die CSV.")
+    return df_crypto, df_stock
 
-    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+# 📌 Load Data
+df_crypto, df_stock = load_data()
 
-    # 🔹 Sentiment in numerische Werte umwandeln
-    df["sentiment_score"] = df["sentiment"].map({"positive": 1, "neutral": 0, "negative": -1})
+# 📊 **Multi-Tab Navigation**
+tab_home, tab_crypto, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💹 Stock Data"])
 
-    return df
+# 🔹 **🏠 HOME (README)**
+with tab_home:
+    st.title("📊 Reims Crypto Scraper!")
+    st.markdown("""
+        **This dashboard provides insights into financial data on Reddit:**
+        - 📈 **Cryptocurrencies:** Sentiment Analysis, Activity & Trends  
+        - 💹 **Stock Market:** Price Trends, Volatility & Market Analysis  
+        
+        Use the tabs to explore different datasets!  
+        """)
 
-# 📌 Daten laden
-df_merged = load_data()
+# 🔹 **📈 CRYPTOCURRENCY ANALYSIS**
+with tab_crypto:
+    st.title("📈 Crypto Sentiment Dashboard")
 
-# 📊 Dashboard Titel
-st.title("📊 Krypto-Sentiment Dashboard")
+    if df_crypto.empty:
+        st.warning("⚠️ No Crypto Data Available.")
+    else:
+        st.subheader("🔥 Top 10 Most Mentioned Cryptocurrencies")
+        crypto_counts = df_crypto["crypto"].value_counts().head(10)
+        st.bar_chart(crypto_counts)
 
-if df_merged.empty:
-    st.warning("⚠️ Keine Daten verfügbar. Überprüfe Google Drive oder lade neue Daten hoch.")
-else:
-    # 🔹 **1️⃣ Häufig diskutierte Coins**
-    st.subheader("🔥 Top 10 meist erwähnte Kryptowährungen")
-    crypto_counts = df_merged["crypto"].value_counts().head(10)
-    st.bar_chart(crypto_counts)
+        st.subheader("💡 Sentiment Distribution of Cryptos")
+        sentiment_distribution = df_crypto.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
+        st.bar_chart(sentiment_distribution)
 
-    # 🔹 **2️⃣ Sentiment-Verteilung pro Coin**
-    st.subheader("💡 Sentiment-Verteilung der Coins")
-    sentiment_distribution = df_merged.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
-    st.bar_chart(sentiment_distribution)
+        st.subheader("📅 Sentiment Trend Over Time")
+        crypto_options = df_crypto["crypto"].unique().tolist()
+        selected_crypto = st.selectbox("Choose a Cryptocurrency:", crypto_options, index=0)
+        
+        df_filtered = df_crypto[(df_crypto["crypto"] == selected_crypto) & (df_crypto["sentiment"] != "neutral")]
+        df_time = df_filtered.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
 
-    # 🔹 **3️⃣ Verhältnis Positiv vs. Negativ (Matplotlib Pie-Chart)**
-    st.subheader("📈 Verhältnis Positiv vs. Negativ")
-    sentiment_ratio = df_merged[df_merged["sentiment"] != "neutral"].groupby("sentiment").size()
+        st.line_chart(df_time)
 
-    fig, ax = plt.subplots(figsize=(5, 5))
-    ax.set_facecolor("#2E2E2E")  # Dunkler Hintergrund
-    fig.patch.set_facecolor("#2E2E2E")
+# 🔹 **💹 STOCK MARKET ANALYSIS**
+with tab_stocks:
+    st.title("💹 Stock Market Analysis")
 
-    ax.pie(
-        sentiment_ratio,
-        labels=sentiment_ratio.index,
-        autopct="%1.1f%%",
-        startangle=90,
-        colors=["green", "red"]
-    )
-    ax.axis("equal")  # Kreisförmige Darstellung
-    st.pyplot(fig)
+    if df_stock.empty:
+        st.warning("⚠️ No Stock Data Available.")
+    else:
+        st.subheader("📊 Top Performing Stocks")
+        stock_counts = df_stock["stock"].value_counts().head(10)
+        st.bar_chart(stock_counts)
 
-    # 🔹 **4️⃣ Interaktive Sentiment-Entwicklung**
-    st.subheader("📅 Sentiment-Entwicklung über Zeit")
-    crypto_options = df_merged["crypto"].unique().tolist()
-    selected_crypto = st.selectbox("Wähle eine Kryptowährung:", crypto_options, index=0)
+        st.subheader("📈 Stock Price Trends")
+        stock_options = df_stock["stock"].unique().tolist()
+        selected_stock = st.selectbox("Choose a Stock:", stock_options, index=0)
+        
+        df_stock_filtered = df_stock[df_stock["stock"] == selected_stock]
+        df_price_time = df_stock_filtered.groupby(["date"])["price"].mean()
 
-    df_filtered = df_merged[(df_merged["crypto"] == selected_crypto) & (df_merged["sentiment"] != "neutral")]
-    df_time = df_filtered.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
+        st.line_chart(df_price_time)
 
-    st.line_chart(df_time)
-
-    # 🔹 **5️⃣ Heatmap: Sentiment-Verteilung**
-    st.subheader("🌡️ Sentiment-Heatmap der Top Coins")
-    sentiment_counts = df_merged[df_merged["sentiment"] != "neutral"].groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-    sns.heatmap(sentiment_counts, annot=True, fmt="d", cmap="RdYlGn", linewidths=0.5, ax=ax)
-    st.pyplot(fig)
-
-    # 🔹 **6️⃣ Durchschnittliches Sentiment pro Coin**
-    st.subheader("📊 Durchschnittliches Sentiment pro Coin")
-    avg_sentiment = df_merged.groupby("crypto")["sentiment_score"].mean().sort_values()
-
-    fig, ax = plt.subplots(figsize=(10, 5))
-    avg_sentiment.plot(kind="bar", color=["red" if x < 0 else "green" for x in avg_sentiment], ax=ax)
-    ax.set_ylabel("Durchschnittliches Sentiment")
-    st.pyplot(fig)
-
-    # 🔹 **7️⃣ Volatilität des Sentiments pro Coin**
-    st.subheader("📉 Sentiment-Volatilität pro Coin")
-    sentiment_std = df_merged.groupby("crypto")["sentiment_score"].std().sort_values(ascending=False)
-
-    fig, ax = plt.subplots(figsize=(10, 5))
-    sentiment_std.plot(kind="bar", color="blue", ax=ax)
-    ax.set_ylabel("Sentiment-Standardabweichung")
-    st.pyplot(fig)
-
-    # 🔹 **8️⃣ Aktivität pro Coin über Zeit mit Multi-Selection**
-    st.subheader("📅 Aktivität pro Coin über die Zeit")
-
-    # Multi-Select für mehrere Kryptowährungen
-    selected_cryptos = st.multiselect("Wähle eine oder mehrere Kryptowährungen:", crypto_options, default=crypto_options[:3])
-
-    if selected_cryptos:
-        df_activity_filtered = df_merged[df_merged["crypto"].isin(selected_cryptos)]
-        activity_per_day = df_activity_filtered.groupby(["date", "crypto"]).size().unstack(fill_value=0)
-        st.line_chart(activity_per_day)
-
-    st.write("🔄 Dashboard wird regelmäßig mit neuen Daten aktualisiert!")
+    st.write("🔄 Dashboard is regularly updated with new data!")
