@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # 📌 Streamlit Page Configuration
-st.set_page_config(page_title="Financial Data Dashboard", layout="centered")
+st.set_page_config(page_title="Reims-Reddit Financial Data Dashboard", layout="centered")
 
 # 📌 Google Drive File ID for the latest dataset
 MERGED_CRYPTO_CSV_ID = "10Ft5DpBI-B3tBfU5wOVzGRj_vwT7TNxa"
