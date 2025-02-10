@@ -6,13 +6,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # 📌 Streamlit Page Configuration
-st.set_page_config(page_title="Financial Data Dashboard", layout="centered")
+st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="centered")
 
-# 📌 Google Drive Direct Links (Replace with your File IDs)
-MERGED_CRYPTO_CSV_ID = "102W-f_u58Jvx9xBAv4IaYrOY6txk-XKL"
+# 📌 Google Drive File ID for the latest dataset
+MERGED_CSV_ID = "10Ft5DpBI-B3tBfU5wOVzGRj_vwT7TNxa"
 
-# 📌 Local File Paths for Downloaded CSVs
-MERGED_CRYPTO_CSV = "reddit_merged_crypto.csv"
+# 📌 Local filename for the downloaded CSV
+MERGED_CSV = "reddit_merged.csv"
 
 # 🔹 Function to Download CSV from Google Drive
 @st.cache_data
@@ -20,78 +20,58 @@ def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
-def load_crypto_data():
-    download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)  # Zwingt Streamlit, die Datei neu zu holen
-    df_crypto = pd.read_csv(MERGED_CRYPTO_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
-    return df_crypto
+# 🔹 Function to Load Data
+@st.cache_data
+def load_data():
+    if not os.path.exists(MERGED_CSV):
+        download_csv(MERGED_CSV_ID, MERGED_CSV)
 
+    df_crypto = pd.read_csv(MERGED_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # Ensure the "date" column exists
-    if "date" not in df_crypto.columns:
-        if "date_x" in df_crypto.columns:
-            df_crypto["date"] = df_crypto["date_x"]
-        elif "date_y" in df_crypto.columns:
-            df_crypto["date"] = df_crypto["date_y"]
-        else:
-            raise KeyError("⚠️ No valid 'date' column found! Check the CSV.")
+    # 🔍 Debugging: Check available columns
+    print("📝 Columns in df_crypto:", df_crypto.columns.tolist())
 
-    df_crypto["date"] = pd.to_datetime(df_crypto["date"], errors="coerce")
-    df_crypto["sentiment_score"] = df_crypto["sentiment"].map({"positive": 1, "neutral": 0, "negative": -1})
-
-    return df_crypto
-
-# 📌 Refresh Button
-if st.button("🔄 Refresh Data"):
-    st.cache_data.clear()  # Löscht den Cache
-    os.remove(MERGED_CRYPTO_CSV)  # Löscht die Datei, damit sie neu heruntergeladen wird
-    st.rerun()  # Erneut laden
-
-
-# 📌 Load Crypto Data
-df_crypto = load_crypto_data()
-
-# 📊 **Multi-Tab Navigation**
-tab_home, tab_crypto, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💹 Stock Data"])
-
-# 🔹 **🏠 HOME (README)**
-with tab_home:
-    st.title("📊 Reims-Reddit Data Dashboard")
-    st.markdown("""
-        **This dashboard provides insights into financial data from Reddit:**
-        - 📈 **Cryptocurrencies:** Sentiment Analysis, Activity & Trends  
-        - 💹 **Stock Market:** (🚧 Coming Soon)  
-
-        Use the tabs to explore different datasets!  
-        """)
-
-# 🔹 **📈 CRYPTOCURRENCY ANALYSIS**
-with tab_crypto:
-    st.title("📈 Crypto Sentiment Dashboard")
-
-    if df_crypto.empty:
-        st.warning("⚠️ No Crypto Data Available.")
+    # 🔹 Ensure a valid date column exists
+    possible_date_cols = [col for col in df_crypto.columns if "date" in col.lower()]
+    if possible_date_cols:
+        df_crypto["date"] = pd.to_datetime(df_crypto[possible_date_cols[0]], errors="coerce")
     else:
-        st.subheader("🔥 Top 10 Most Mentioned Cryptocurrencies")
-        crypto_counts = df_crypto["crypto"].value_counts().head(10)
-        st.bar_chart(crypto_counts)
+        raise KeyError(f"⚠️ No valid 'date' column found! Available columns: {df_crypto.columns.tolist()}")
 
-        st.subheader("💡 Sentiment Distribution of Cryptos")
-        sentiment_distribution = df_crypto.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
-        st.bar_chart(sentiment_distribution)
+    return df_crypto
 
-        st.subheader("📅 Sentiment Trend Over Time")
-        crypto_options = df_crypto["crypto"].unique().tolist()
-        selected_crypto = st.selectbox("Choose a Cryptocurrency:", crypto_options, index=0)
+# 📌 Load Data
+df_crypto = load_data()
 
-        df_filtered = df_crypto[(df_crypto["crypto"] == selected_crypto) & (df_crypto["sentiment"] != "neutral")]
-        df_time = df_filtered.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
+# 📊 **Dashboard Title**
+st.title("📊 Crypto Sentiment Dashboard")
 
-        st.line_chart(df_time)
+# 🔄 **Refresh Button**
+if st.button("🔄 Refresh Data"):
+    st.cache_data.clear()
+    st.experimental_rerun()
 
-# 🔹 **💹 STOCK MARKET ANALYSIS**
-with tab_stocks:
-    st.title("💹 Stock Market Analysis (🚧 In Development)")
-    st.warning("⚠️ Stock market data will be added soon. Stay tuned!")
+if df_crypto.empty:
+    st.warning("⚠️ No Crypto Data Available.")
+else:
+    # 🔹 **1️⃣ Most Discussed Cryptos**
+    st.subheader("🔥 Top 10 Most Mentioned Cryptocurrencies")
+    crypto_counts = df_crypto["crypto"].value_counts().head(10)
+    st.bar_chart(crypto_counts)
+
+    # 🔹 **2️⃣ Sentiment Distribution per Crypto**
+    st.subheader("💡 Sentiment Distribution of Cryptos")
+    sentiment_distribution = df_crypto.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
+    st.bar_chart(sentiment_distribution)
+
+    # 🔹 **3️⃣ Sentiment Trend Over Time**
+    st.subheader("📅 Sentiment Trend Over Time")
+    crypto_options = df_crypto["crypto"].unique().tolist()
+    selected_crypto = st.selectbox("Choose a Cryptocurrency:", crypto_options, index=0)
+
+    df_filtered = df_crypto[(df_crypto["crypto"] == selected_crypto) & (df_crypto["sentiment"] != "neutral")]
+    df_time = df_filtered.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
+
+    st.line_chart(df_time)
 
     st.write("🔄 Dashboard is regularly updated with new data!")
-
