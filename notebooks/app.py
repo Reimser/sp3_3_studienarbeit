@@ -41,10 +41,12 @@ def load_crypto_data():
 
     return df_crypto
 
-# 📌 **Refresh Button**
+# 📌 Refresh Button
 if st.button("🔄 Refresh Data"):
-    st.cache_data.clear()  # Clears the cache
-    st.rerun()  # Forces Streamlit to reload the script
+    st.cache_data.clear()  # Löscht den Cache
+    os.remove(MERGED_CRYPTO_CSV)  # Löscht die Datei, damit sie neu heruntergeladen wird
+    st.rerun()  # Erneut laden
+
 
 # 📌 Load Crypto Data
 df_crypto = load_crypto_data()
