@@ -21,7 +21,6 @@ def download_csv(file_id, output):
     gdown.download(url, output, quiet=False)
 
 # 🔹 Function to Load Crypto Data
-@st.cache_data
 def load_crypto_data():
     if not os.path.exists(MERGED_CRYPTO_CSV):
         download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
