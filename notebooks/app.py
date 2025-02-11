@@ -147,29 +147,38 @@ with tab_prices:
     if df_prices.empty:
         st.warning("⚠️ No Crypto Price Data Available.")
     else:
-        st.subheader("📈 Historical Crypto Prices")
-        selected_price_crypto = st.selectbox("Choose a Cryptocurrency for Price Data:", df_prices["crypto"].unique(), key="price_crypto")
+        st.subheader("📊 Word Count & Price Over Time")
 
-        df_price_filtered = df_prices[df_prices["crypto"] == selected_price_crypto]
-        st.line_chart(df_price_filtered.set_index("date")["price"])
+        # Auswahl einer Kryptowährung für die kombinierte Analyse
+        selected_crypto_dual = st.selectbox("Choose a Cryptocurrency for Word Count & Price:", df_prices["crypto"].unique(), key="dual_axis_crypto")
 
-        st.subheader("📊 Correlation Between Sentiment & Prices")
-        df_combined = df_crypto.merge(df_prices, left_on=["comment_date", "crypto"], right_on=["date", "crypto"], how="inner")
+        # Daten für die gewählte Krypto filtern
+        df_wordcount_filtered = df_crypto[df_crypto["crypto"] == selected_crypto_dual].groupby("comment_date").size().reset_index(name="word_count")
+        df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_dual]
 
-        correlation_matrix = df_combined[["sentiment_score", "price"]].corr()
+        # Sicherstellen, dass beide DataFrames die gleiche Zeitachse haben
+        df_combined_dual = df_wordcount_filtered.merge(df_price_filtered, left_on="comment_date", right_on="date", how="inner")
 
-        fig, ax = plt.subplots(figsize=(6, 4))
-        sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", ax=ax)
+        # Visualisierung mit zwei Y-Achsen
+        fig, ax1 = plt.subplots(figsize=(10, 5))
+
+        # Word Count auf linker Achse
+        ax1.set_xlabel("Date")
+        ax1.set_ylabel("Word Count", color="blue")
+        ax1.plot(df_combined_dual["comment_date"], df_combined_dual["word_count"], color="blue", label="Word Count", alpha=0.7)
+        ax1.tick_params(axis="y", labelcolor="blue")
+
+        # Preis auf rechter Achse
+        ax2 = ax1.twinx()
+        ax2.set_ylabel("Price (USD)", color="red")
+        ax2.plot(df_combined_dual["comment_date"], df_combined_dual["price"], color="red", label="Price", alpha=0.7)
+        ax2.tick_params(axis="y", labelcolor="red")
+
+        # Titel und Legende
+        fig.suptitle(f"Word Count & Price for {selected_crypto_dual} Over Time")
+        fig.tight_layout()
         st.pyplot(fig)
 
-        st.subheader("📊 Sentiment Influence on Daily Price Changes")
-        df_combined["price_change"] = df_combined.groupby("crypto")["price"].pct_change()
-        sentiment_effect = df_combined.groupby("sentiment")["price_change"].mean()
-
-        fig, ax = plt.subplots(figsize=(8, 5))
-        sentiment_effect.plot(kind="bar", color=["red", "gray", "green"], ax=ax)
-        ax.set_ylabel("Avg. Daily Price Change (%)")
-        st.pyplot(fig)
 
 # 🔹 **💹 STOCK MARKET ANALYSIS**
 with tab_stocks:
