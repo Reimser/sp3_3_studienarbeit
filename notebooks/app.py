@@ -86,12 +86,7 @@ with tab_home:
 
         🔄 **Data is regularly updated to reflect the latest trends.**
     """)
-
-    # 🔄 **Refresh Button**
-    if st.button("🔄 Refresh Data"):
-        st.cache_data.clear()
-        st.experimental_rerun()
-
+    
 # 🔹 **📈 CRYPTOCURRENCY ANALYSIS**
 with tab_crypto:
     st.title("📈 Crypto Sentiment Dashboard")
