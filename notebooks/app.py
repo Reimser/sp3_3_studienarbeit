@@ -120,10 +120,10 @@ with tab_crypto:
             default=df_crypto["crypto"].unique()[:3]
         )
 
-    if selected_cryptos_wordcount:
-        df_wordcount_filtered = df_crypto[df_crypto["crypto"].isin(selected_cryptos_wordcount)]
-        wordcount_per_day = df_wordcount_filtered.groupby(["comment_date", "crypto"]).size().unstack(fill_value=0)
-        st.line_chart(wordcount_per_day)
+        if selected_cryptos_wordcount:
+            df_wordcount_filtered = df_crypto[df_crypto["crypto"].isin(selected_cryptos_wordcount)]
+            wordcount_per_day = df_wordcount_filtered.groupby(["comment_date", "crypto"]).size().unstack(fill_value=0)
+            st.line_chart(wordcount_per_day)
 
 
         # 🔹 **3️⃣ Sentiment Trend Over Time (Based on Comments)**
@@ -140,14 +140,7 @@ with tab_crypto:
             df_time = df_filtered.groupby(["comment_date", "sentiment"]).size().unstack(fill_value=0)
             st.line_chart(df_time)
 
-# 🔹 **💰 CRYPTO PRICE ANALYSIS**
-with tab_prices:
-    st.title("💰 Crypto Prices & Sentiment Impact")
-
-    if df_prices.empty:
-        st.warning("⚠️ No Crypto Price Data Available.")
-    else:
-        # 📊 **2️⃣ Word Count & Price Over Time**
+    # 📊 **2️⃣ Word Count & Price Over Time**
         st.subheader("📊 Word Count & Price Over Time")
 
         # Auswahl einer Kryptowährung für die kombinierte Analyse
@@ -179,46 +172,6 @@ with tab_prices:
         fig.suptitle(f"Word Count & Price for {selected_crypto_dual} Over Time")
         fig.tight_layout()
         st.pyplot(fig)
-
-        # 🔹 **📊 Price Change vs. Extreme Sentiment**
-        st.subheader("📈 Price Movement for Extreme Sentiment Days")
-
-        # Berechnung der 3-Tages-Preisänderung
-        df_prices["price_change_3d"] = df_prices.groupby("crypto")["price"].pct_change(periods=3)
-
-        # Kombination mit Sentiment-Daten
-        df_combined = df_crypto.merge(df_prices, left_on=["comment_date", "crypto"], right_on=["date", "crypto"], how="inner")
-
-        # Berechnung der Sentiment-Perzentile (Top 10% & Bottom 10%)
-        lower_threshold = df_combined["sentiment_score"].quantile(0.1)  # Unterste 10%
-        upper_threshold = df_combined["sentiment_score"].quantile(0.9)  # Oberste 10%
-
-        # Auswahl nur extremer Sentiment-Werte
-        df_extreme_sentiment = df_combined[
-            (df_combined["sentiment_score"] <= lower_threshold) | (df_combined["sentiment_score"] >= upper_threshold)
-        ]
-
-        # Gruppieren nach Crypto & Sentiment für den Mittelwert der 3-Tages-Preisveränderung
-        df_sentiment_price_change = df_extreme_sentiment.groupby(["crypto", "sentiment"])["price_change_3d"].mean().unstack()
-
-        # 🔹 **Fix: Nur numerische Werte behalten & NaN durch 0 ersetzen**
-        df_sentiment_price_change = df_sentiment_price_change.apply(pd.to_numeric, errors='coerce').fillna(0)
-
-        # Heatmap-Visualisierung
-        fig, ax = plt.subplots(figsize=(10, 5))
-        sns.heatmap(df_sentiment_price_change * 100, annot=True, fmt=".2f", cmap="RdYlGn", linewidths=0.5, ax=ax)
-
-        # 🔹 **Achsentitel & Labels**
-        ax.set_title("Average 3-Day Price Change Based on Extreme Sentiment")
-        ax.set_xlabel("Sentiment Type")
-        ax.set_ylabel("Cryptocurrency")
-
-        # 🔹 **Fix: Prozentzeichen in Achsentitel statt in `fmt`**
-        for text in ax.texts:
-            text.set_text(text.get_text() + "%")  # Prozentzeichen an jede Zelle anhängen
-
-        st.pyplot(fig)
-
 
 
 # 🔹 **💹 STOCK MARKET ANALYSIS**
