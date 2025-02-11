@@ -8,12 +8,14 @@ import seaborn as sns
 # 📌 Streamlit Page Configuration
 st.set_page_config(page_title="Reims-Reddit Financial Data Dashboard", layout="centered")
 
-# 📌 Google Drive File ID for the latest dataset
+# 📌 Google Drive File IDs for datasets
 MERGED_CRYPTO_CSV_ID = "10Ft5DpBI-B3tBfU5wOVzGRj_vwT7TNxa"
+CRYPTO_PRICES_CSV_ID = "10kP3Yol0RG7oXZJYwYqgze4VfXPrshaH"
 MERGED_STOCK_CSV_ID = "STOCK_FILE_ID"  # Replace when stock data is available
 
 # 📌 Local filenames
 MERGED_CRYPTO_CSV = "reddit_merged_crypto.csv"
+CRYPTO_PRICES_CSV = "crypto_prices.csv"
 MERGED_STOCK_CSV = "stock_data.csv"
 
 # 🔹 Function to Download CSV from Google Drive
@@ -22,7 +24,7 @@ def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
-# 🔹 Function to Load Crypto Data
+# 🔹 Function to Load Crypto Sentiment Data
 @st.cache_data
 def load_crypto_data():
     if not os.path.exists(MERGED_CRYPTO_CSV):
@@ -46,6 +48,17 @@ def load_crypto_data():
 
     return df_crypto
 
+# 🔹 Function to Load Crypto Price Data
+@st.cache_data
+def load_crypto_prices():
+    if not os.path.exists(CRYPTO_PRICES_CSV):
+        download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
+
+    df_prices = pd.read_csv(CRYPTO_PRICES_CSV)
+    df_prices["date"] = pd.to_datetime(df_prices["date"], errors="coerce")
+    
+    return df_prices
+
 # 🔹 Function to Load Stock Data (Placeholder)
 @st.cache_data
 def load_stock_data():
@@ -53,10 +66,11 @@ def load_stock_data():
 
 # 📌 Load Data
 df_crypto = load_crypto_data()
+df_prices = load_crypto_prices()
 df_stock = load_stock_data()
 
 # 📊 **Multi-Tab Navigation**
-tab_home, tab_crypto, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💹 Stock Data"])
+tab_home, tab_crypto, tab_prices, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💰 Crypto Prices", "💹 Stock Data"])
 
 # 🔹 **🏠 HOME (README)**
 with tab_home:
@@ -65,6 +79,7 @@ with tab_home:
         **This dashboard provides insights into financial sentiment trends using Reddit discussions.**
         
         - **📈 Crypto Data:** Sentiment Analysis, Activity & Trends  
+        - **💰 Crypto Prices:** Historical trends & correlation with sentiment  
         - **💹 Stock Market Data (Coming Soon)**  
 
         🔄 **Data is regularly updated to reflect the latest trends.**
@@ -105,43 +120,38 @@ with tab_crypto:
             df_time = df_filtered.groupby(["comment_date", "sentiment"]).size().unstack(fill_value=0)
             st.line_chart(df_time)
 
-        # 🔹 **6️⃣ Sentiment Heatmap of Top Cryptos**
-        st.subheader("🌡️ Sentiment Heatmap of Top Cryptos")
-        sentiment_counts = df_crypto[df_crypto["sentiment"] != "neutral"].groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
+# 🔹 **💰 CRYPTO PRICE ANALYSIS**
+with tab_prices:
+    st.title("💰 Crypto Prices & Sentiment Impact")
 
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sns.heatmap(sentiment_counts, annot=True, fmt="d", cmap="RdYlGn", linewidths=0.5, ax=ax)
+    if df_prices.empty:
+        st.warning("⚠️ No Crypto Price Data Available.")
+    else:
+        st.subheader("📈 Historical Crypto Prices")
+        selected_price_crypto = st.selectbox("Choose a Cryptocurrency:", df_prices["crypto"].unique())
+
+        df_price_filtered = df_prices[df_prices["crypto"] == selected_price_crypto]
+        st.line_chart(df_price_filtered.set_index("date")["price"])
+
+        st.subheader("📊 Correlation Between Sentiment & Prices")
+        df_combined = df_crypto.merge(df_prices, left_on=["comment_date", "crypto"], right_on=["date", "crypto"], how="inner")
+
+        correlation_matrix = df_combined[["sentiment_score", "price"]].corr()
+
+        fig, ax = plt.subplots(figsize=(6, 4))
+        sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", ax=ax)
         st.pyplot(fig)
 
-        # 🔹 **7️⃣ Average Sentiment Score per Crypto**
-        st.subheader("📊 Average Sentiment Score per Crypto")
-        avg_sentiment = df_crypto.groupby("crypto")["sentiment_score"].mean().sort_values()
+        st.subheader("📊 Sentiment Influence on Daily Price Changes")
+        df_combined["price_change"] = df_combined.groupby("crypto")["price"].pct_change()
+        sentiment_effect = df_combined.groupby("sentiment")["price_change"].mean()
 
-        fig, ax = plt.subplots(figsize=(10, 5))
-        avg_sentiment.plot(kind="bar", color=["red" if x < 0 else "green" for x in avg_sentiment], ax=ax)
-        ax.set_ylabel("Average Sentiment Score")
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sentiment_effect.plot(kind="bar", color=["red", "gray", "green"], ax=ax)
+        ax.set_ylabel("Avg. Daily Price Change (%)")
         st.pyplot(fig)
-
-        # 🔹 **8️⃣ Sentiment Volatility per Crypto**
-        st.subheader("📉 Sentiment Volatility per Crypto")
-        sentiment_std = df_crypto.groupby("crypto")["sentiment_score"].std().sort_values(ascending=False)
-
-        fig, ax = plt.subplots(figsize=(10, 5))
-        sentiment_std.plot(kind="bar", color="blue", ax=ax)
-        ax.set_ylabel("Sentiment Standard Deviation")
-        st.pyplot(fig)
-
-        # 🔹 **9️⃣ Multi-Selection Activity Over Time**
-        st.subheader("📅 Multi-Selection Activity Over Time")
-        selected_cryptos = st.multiselect("Choose one or more Cryptocurrencies:", crypto_options, default=crypto_options[:3])
-
-        if selected_cryptos:
-            df_activity_filtered = df_crypto[df_crypto["crypto"].isin(selected_cryptos)]
-            activity_per_day = df_activity_filtered.groupby(["comment_date", "crypto"]).size().unstack(fill_value=0)
-            st.line_chart(activity_per_day)
 
 # 🔹 **💹 STOCK MARKET ANALYSIS**
 with tab_stocks:
     st.title("💹 Stock Market Analysis (Coming Soon)")
     st.warning("🚧 This section is under development. Stock data will be integrated soon!")
-
