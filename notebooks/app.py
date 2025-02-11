@@ -167,6 +167,29 @@ with tab_crypto:
         fig.tight_layout()
         st.pyplot(fig)
 
+        # 🔹 **1️⃣ Boxplot: Sentiment Confidence per Crypto**
+        st.subheader("📊 Sentiment Confidence per Cryptocurrency")
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+        sns.boxplot(x="crypto", y="sentiment_confidence", data=df_crypto, ax=ax)
+        ax.set_ylabel("Sentiment Confidence Score")
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45)  # Drehe Labels für bessere Lesbarkeit
+        st.pyplot(fig)
+
+        # 🔹 **2️⃣ Filtered Sentiment Distribution (Only High Confidence)**
+        st.subheader("🎯 Sentiment Distribution (Only High Confidence)")
+
+        # Wähle einen Confidence-Threshold (z. B. 0.8)
+        CONFIDENCE_THRESHOLD = 0.8
+
+        df_high_confidence = df_crypto[df_crypto["sentiment_confidence"] >= CONFIDENCE_THRESHOLD]
+        sentiment_dist_high_conf = df_high_confidence["sentiment"].value_counts(normalize=True) * 100  # Prozentwerte
+
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sentiment_dist_high_conf.plot(kind="bar", color=["red", "gray", "green"], ax=ax)
+        ax.set_ylabel("Percentage of High Confidence Sentiments (%)")
+        st.pyplot(fig)
+
 
 # 🔹 **💹 STOCK MARKET ANALYSIS**
 with tab_stocks:
