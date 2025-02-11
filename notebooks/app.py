@@ -109,6 +109,44 @@ with tab_crypto:
         st.subheader("💡 Sentiment Distribution of Cryptos")
         sentiment_distribution = df_crypto.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
         st.bar_chart(sentiment_distribution)
+        
+        st.subheader(f"📈 Smoothed Sentiment Trend for {selected_crypto}")
+        ##
+        st.subheader("📝 Word Count Evolution Over Time")
+
+        # Multi-Select für mehrere Kryptowährungen
+        selected_cryptos_wordcount = st.multiselect(
+            "Choose Cryptos to Compare Word Frequency:",
+            crypto_options,
+            default=crypto_options[:3]
+        )
+
+        if selected_cryptos_wordcount:
+            # 🔹 Filtere die Daten nach den ausgewählten Kryptowährungen
+            df_wordcount_filtered = df_crypto[df_crypto["crypto"].isin(selected_cryptos_wordcount)]
+
+            # 🔹 Aggregiere den Word Count pro Tag für jede Krypto
+            wordcount_per_day = df_wordcount_filtered.groupby(["comment_date", "crypto"]).size().unstack(fill_value=0)
+
+            # 🔹 Visualisierung als Liniendiagramm
+            st.line_chart(wordcount_per_day)
+
+        ##
+        df_sentiment_score = df_crypto[df_crypto["crypto"] == selected_crypto].groupby("comment_date")["sentiment_score"].mean()
+        df_sentiment_score_ma = df_sentiment_score.rolling(window=7).mean()  # 7-Tage-Durchschnitt
+
+        fig, ax = plt.subplots(figsize=(8, 4))
+        df_sentiment_score.plot(ax=ax, label="Daily Sentiment Score", alpha=0.5)
+        df_sentiment_score_ma.plot(ax=ax, label="7-Day Moving Avg", linewidth=2, color="red")
+        ax.legend()
+        st.pyplot(fig)
+
+
+        # 🔹 Wordcount per Crypto Over Time
+        st.subheader("📊 Wordcount per Crypto Over Time")
+        df_wordcount = df_crypto.groupby(["comment_date", "crypto"]).size().unstack(fill_value=0)
+        st.line_chart(df_wordcount)
+
 
         # 🔹 **3️⃣ Sentiment Trend Over Time (Based on Comments)**
         st.subheader("📅 Sentiment Trend Over Time (Comments)")
