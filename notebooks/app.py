@@ -147,17 +147,6 @@ with tab_prices:
     if df_prices.empty:
         st.warning("⚠️ No Crypto Price Data Available.")
     else:
-         # 📈 **1️⃣ Historical Crypto Prices**
-        st.subheader("📈 Historical Crypto Prices")
-        selected_price_crypto = st.selectbox(
-            "Choose a Cryptocurrency for Price Data:", 
-            df_prices["crypto"].unique(), 
-            key="price_crypto"
-        )
-        
-        df_price_filtered = df_prices[df_prices["crypto"] == selected_price_crypto]
-        st.line_chart(df_price_filtered.set_index("date")["price"])
-
         # 📊 **2️⃣ Word Count & Price Over Time**
         st.subheader("📊 Word Count & Price Over Time")
 
@@ -191,46 +180,34 @@ with tab_prices:
         fig.tight_layout()
         st.pyplot(fig)
 
+        # 🔹 **📊 Price Change vs. Extreme Sentiment**
+        st.subheader("📈 Price Movement for Extreme Sentiment Days")
 
-         # 🔹 **2️⃣ Preisveränderung vor und nach extremen Sentiment-Werten**
-        st.subheader("📉 Price Change Before & After Extreme Sentiment Days")
+        # Berechnung der 3-Tages-Preisänderung
+        df_prices["price_change_3d"] = df_prices.groupby("crypto")["price"].pct_change(periods=3)
 
-        # Sentiment-Durchschnitt pro Tag berechnen
-        df_sentiment_daily = df_crypto.groupby(["comment_date", "crypto"])["sentiment_score"].mean().reset_index()
+        # Kombination mit Sentiment-Daten
+        df_combined = df_crypto.merge(df_prices, left_on=["comment_date", "crypto"], right_on=["date", "crypto"], how="inner")
 
-        # Verbinden mit Preis-Daten
-        df_combined = df_sentiment_daily.merge(df_prices, left_on=["comment_date", "crypto"], right_on=["date", "crypto"], how="inner")
+        # Berechnung der Sentiment-Perzentile
+        lower_threshold = df_combined["sentiment_score"].quantile(0.1)  # Unterste 10%
+        upper_threshold = df_combined["sentiment_score"].quantile(0.9)  # Oberste 10%
 
-        # Markiere extreme Sentiment-Tage
-        bullish_threshold = 0.7
-        bearish_threshold = -0.7
+        # Auswahl nur extremer Sentiment-Werte
+        df_extreme_sentiment = df_combined[
+            (df_combined["sentiment_score"] <= lower_threshold) | (df_combined["sentiment_score"] >= upper_threshold)
+        ]
 
-        df_combined["sentiment_type"] = "neutral"
-        df_combined.loc[df_combined["sentiment_score"] > bullish_threshold, "sentiment_type"] = "bullish"
-        df_combined.loc[df_combined["sentiment_score"] < bearish_threshold, "sentiment_type"] = "bearish"
+        # Gruppieren nach Crypto & Sentiment für den Mittelwert der 3-Tages-Preisveränderung
+        df_sentiment_price_change = df_extreme_sentiment.groupby(["crypto", "sentiment"])["price_change_3d"].mean().unstack()
 
-        # Preisveränderung vor und nach diesen Tagen berechnen
-        df_combined["price_change"] = df_combined.groupby("crypto")["price"].pct_change()
-
-        sentiment_effect = df_combined.groupby("sentiment_type")["price_change"].mean()
-
-        fig, ax = plt.subplots(figsize=(8, 5))
-        sentiment_effect.plot(kind="bar", color=["red", "gray", "green"], ax=ax)
-        ax.set_ylabel("Avg. Daily Price Change (%)")
-        ax.set_title("Average Price Change Based on Extreme Sentiment Days")
-        st.pyplot(fig)
-
-        # 🔹 **3️⃣ Preisbewegung pro Sentiment-Kategorie (Heatmap)**
-        st.subheader("📊 Price Movement per Sentiment Category")
-
-        # Durchschnittliche Preisänderung für jede Sentiment-Kategorie berechnen
-        price_change_heatmap = df_combined.groupby(["crypto", "sentiment_type"])["price_change"].mean().unstack(fill_value=0)
-
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sns.heatmap(price_change_heatmap, annot=True, fmt=".2%", cmap="RdYlGn", linewidths=0.5, ax=ax)
-        ax.set_ylabel("Cryptocurrency")
+        # Heatmap-Visualisierung
+        fig, ax = plt.subplots(figsize=(10, 5))
+        sns.heatmap(df_sentiment_price_change * 100, annot=True, fmt=".2f%%", cmap="RdYlGn", linewidths=0.5, ax=ax)
+        ax.set_title("Average 3-Day Price Change Based on Extreme Sentiment")
         ax.set_xlabel("Sentiment Type")
-        ax.set_title("Average Price Change Based on Sentiment")
+        ax.set_ylabel("Cryptocurrency")
+        
         st.pyplot(fig)
 
 # 🔹 **💹 STOCK MARKET ANALYSIS**
