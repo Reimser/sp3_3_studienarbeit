@@ -48,16 +48,28 @@ def load_crypto_data():
 
     return df_crypto
 
-# 🔹 Function to Load Crypto Price Data
+# 🔹 Function to Load Crypto Prices Data
 @st.cache_data
 def load_crypto_prices():
     if not os.path.exists(CRYPTO_PRICES_CSV):
         download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
 
-    df_prices = pd.read_csv(CRYPTO_PRICES_CSV)
-    df_prices["date"] = pd.to_datetime(df_prices["date"], errors="coerce")
-    
+    df_prices = pd.read_csv(CRYPTO_PRICES_CSV, sep=",", encoding="utf-8-sig", on_bad_lines="skip")
+
+    # Debugging: Print available columns
+    print("📝 Columns in df_prices:", df_prices.columns.tolist())
+
+    # Ensure no hidden spaces in column names
+    df_prices.columns = df_prices.columns.str.strip()
+
+    # Convert date column to datetime format
+    if "date" in df_prices.columns:
+        df_prices["date"] = pd.to_datetime(df_prices["date"], errors="coerce")
+    else:
+        raise KeyError(f"⚠️ 'date' column missing! Available columns: {df_prices.columns.tolist()}")
+
     return df_prices
+
 
 # 🔹 Function to Load Stock Data (Placeholder)
 @st.cache_data
