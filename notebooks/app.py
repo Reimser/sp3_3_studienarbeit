@@ -223,6 +223,48 @@ with tab_crypto:
             df_time_high_conf = df_filtered_high_conf.groupby(["comment_date", "sentiment"]).size().unstack(fill_value=0)
             st.line_chart(df_time_high_conf)
 
+        # 🔹 **4️⃣ High-Confidence Sentiment vs. Price Over Time**
+        st.subheader("📊 High-Confidence Sentiment vs. Price Over Time")
+
+        # Auswahl der Kryptowährung
+        selected_crypto_price = st.selectbox(
+            "Choose a Cryptocurrency for Sentiment & Price Analysis:",
+            df_prices["crypto"].unique(),
+            index=0,
+            key="sentiment_price_crypto_high_conf"
+        )
+
+        # Filtere die hochsicheren Sentiments und Preise für die gewählte Krypto
+        df_sentiment_high_conf = df_crypto[
+            (df_crypto["crypto"] == selected_crypto_price) &
+            (df_crypto["sentiment"].isin(["bullish", "bearish"])) &
+            (df_crypto["sentiment_confidence"] >= CONFIDENCE_THRESHOLD)
+        ].groupby(["comment_date", "sentiment"]).size().unstack(fill_value=0)
+
+        df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_price].set_index("date")
+
+        # Merge Sentiment & Price Data
+        df_combined = df_sentiment_high_conf.merge(df_price_filtered, left_index=True, right_index=True, how="inner")
+
+        # Plot mit zwei Y-Achsen
+        fig, ax1 = plt.subplots(figsize=(10, 5))
+
+        # Sentiment-Plot (linke Achse)
+        ax1.set_xlabel("Date")
+        ax1.set_ylabel("Sentiment Count", color="tab:blue")
+        df_combined[["bullish", "bearish"]].plot(kind="bar", stacked=True, ax=ax1, alpha=0.6, color=["green", "red"])
+        ax1.tick_params(axis="y", labelcolor="tab:blue")
+
+        # Preis-Plot (rechte Achse)
+        ax2 = ax1.twinx()
+        ax2.set_ylabel("Price (USD)", color="tab:orange")
+        df_combined["price"].plot(ax=ax2, color="orange", linewidth=2, label="Price")
+        ax2.tick_params(axis="y", labelcolor="tab:orange")
+
+        # Titel & Legende
+        fig.tight_layout()
+        st.pyplot(fig)
+
 # 🔹 **💹 STOCK MARKET ANALYSIS**
 with tab_stocks:
     st.title("💹 Stock Market Analysis (Coming Soon)")
