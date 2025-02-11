@@ -10,13 +10,11 @@ st.set_page_config(page_title="Reims-Reddit Financial Data Dashboard", layout="c
 
 # 📌 Google Drive File IDs for datasets
 MERGED_CRYPTO_CSV_ID = "10Ft5DpBI-B3tBfU5wOVzGRj_vwT7TNxa"
-CRYPTO_PRICES_CSV_ID = "10kP3Yol0RG7oXZJYwYqgze4VfXPrshaH"
-
+CRYPTO_PRICES_CSV_ID = "10mB8tM6s6HOW8Mvd8-0xr3_i_sDTyovL"
 
 # 📌 Local filenames
 MERGED_CRYPTO_CSV = "reddit_merged.csv"
 CRYPTO_PRICES_CSV = "crypto_prices.csv"
-
 
 # 🔹 Function to Download CSV from Google Drive
 @st.cache_data
@@ -54,7 +52,7 @@ def load_crypto_prices():
     if not os.path.exists(CRYPTO_PRICES_CSV):
         download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
 
-    df_prices = pd.read_csv(CRYPTO_PRICES_CSV, sep=",", encoding="utf-8-sig", on_bad_lines="skip")
+    df_prices = pd.read_csv(CRYPTO_PRICES_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
     # Debugging: Print available columns
     print("📝 Columns in df_prices:", df_prices.columns.tolist())
@@ -70,16 +68,9 @@ def load_crypto_prices():
 
     return df_prices
 
-
-# 🔹 Function to Load Stock Data (Placeholder)
-@st.cache_data
-def load_stock_data():
-    return pd.DataFrame()  # Placeholder: No stock data yet
-
 # 📌 Load Data
 df_crypto = load_crypto_data()
 df_prices = load_crypto_prices()
-df_stock = load_stock_data()
 
 # 📊 **Multi-Tab Navigation**
 tab_home, tab_crypto, tab_prices, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💰 Crypto Prices", "💹 Stock Data"])
