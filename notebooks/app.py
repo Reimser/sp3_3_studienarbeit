@@ -9,8 +9,8 @@ import seaborn as sns
 st.set_page_config(page_title="Reims-Reddit Financial Data Dashboard", layout="centered")
 
 # 📌 Google Drive File IDs for datasets
-MERGED_CRYPTO_CSV_ID = "10Ft5DpBI-B3tBfU5wOVzGRj_vwT7TNxa"
-CRYPTO_PRICES_CSV_ID = "10mB8tM6s6HOW8Mvd8-0xr3_i_sDTyovL"
+MERGED_CRYPTO_CSV_ID = "10uv8Y8mELgOUR00xcEsThtrCsF6WF1Pb"
+CRYPTO_PRICES_CSV_ID = "10n-2XOZB0vcHlUPc6gDFJFGDeTPC6Ihg"
 
 # 📌 Local filenames
 MERGED_CRYPTO_CSV = "reddit_merged.csv"
