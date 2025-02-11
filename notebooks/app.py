@@ -73,7 +73,7 @@ df_crypto = load_crypto_data()
 df_prices = load_crypto_prices()
 
 # 📊 **Multi-Tab Navigation**
-tab_home, tab_crypto, tab_prices, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💰 Crypto Prices", "💹 Stock Data"])
+tab_home, tab_crypto, tab_prices, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💹 Stock Data"])
 
 # 🔹 **🏠 HOME (README)**
 with tab_home:
@@ -81,8 +81,7 @@ with tab_home:
     st.markdown("""
         **This dashboard provides insights into financial sentiment trends using Reddit discussions.**
         
-        - **📈 Crypto Data:** Sentiment Analysis, Activity & Trends  
-        - **💰 Crypto Prices:** Historical trends & correlation with sentiment  
+        - **📈 Crypto Data:** Sentiment Analysis, Activity & Trends    
         - **💹 Stock Market Data (Coming Soon)**  
 
         🔄 **Data is regularly updated to reflect the latest trends.**
