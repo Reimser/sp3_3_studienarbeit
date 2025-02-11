@@ -176,19 +176,19 @@ with tab_crypto:
         ax.set_xticklabels(ax.get_xticklabels(), rotation=45)  # Drehe Labels für bessere Lesbarkeit
         st.pyplot(fig)
 
-        # 🔹 **2️⃣ Filtered Sentiment Distribution (Only High Confidence)**
-        st.subheader("🎯 Sentiment Distribution (Only High Confidence)")
+        # 🔹 **Filtered Sentiment Confidence Boxplot (Only Bullish & Bearish)**
+        st.subheader("📊 Sentiment Confidence for Bullish & Bearish Sentiments")
 
-        # Wähle einen Confidence-Threshold (z. B. 0.8)
-        CONFIDENCE_THRESHOLD = 0.8
-
-        df_high_confidence = df_crypto[df_crypto["sentiment_confidence"] >= CONFIDENCE_THRESHOLD]
-        sentiment_dist_high_conf = df_high_confidence["sentiment"].value_counts(normalize=True) * 100  # Prozentwerte
+        # Filtere nur Bullish & Bearish Sentiments
+        df_filtered_sentiments = df_crypto[df_crypto["sentiment"].isin(["bullish", "bearish"])]
 
         fig, ax = plt.subplots(figsize=(8, 5))
-        sentiment_dist_high_conf.plot(kind="bar", color=["red", "gray", "green"], ax=ax)
-        ax.set_ylabel("Percentage of High Confidence Sentiments (%)")
+        sns.boxplot(x="sentiment", y="sentiment_confidence", data=df_filtered_sentiments, ax=ax, showfliers=True)
+        sns.stripplot(x="sentiment", y="sentiment_confidence", data=df_filtered_sentiments, ax=ax, color="black", alpha=0.3, jitter=True)
+
+        ax.set_ylabel("Sentiment Confidence Score")
         st.pyplot(fig)
+
 
 
 # 🔹 **💹 STOCK MARKET ANALYSIS**
