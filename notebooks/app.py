@@ -103,9 +103,10 @@ with tab_home:
         ---
         🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
     """)
-    if st.button("🔄 Clear Cache & Reload Data"):
+    if st.button("🔄 Clear Cache & Refresh Data"):
         st.cache_data.clear()
-        st.rerun()
+        st.warning("Cache cleared! Please refresh the page manually (Ctrl + R or Cmd + R).")
+
 
 
 # 🔹 **📈 CRYPTOCURRENCY ANALYSIS**
