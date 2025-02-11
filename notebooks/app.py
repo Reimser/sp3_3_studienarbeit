@@ -223,48 +223,58 @@ with tab_crypto:
             df_time_high_conf = df_filtered_high_conf.groupby(["comment_date", "sentiment"]).size().unstack(fill_value=0)
             st.line_chart(df_time_high_conf)
 
-        # 🔹 **4️⃣ High-Confidence Sentiment vs. Price Over Time**
-        st.subheader("📊 High-Confidence Sentiment vs. Price Over Time")
+        # 📊 **3️⃣ High-Confidence Sentiment & Price Over Time**
+        st.subheader("📊 High-Confidence Sentiment & Price Over Time")
 
-        # Auswahl der Kryptowährung
-        selected_crypto_price = st.selectbox(
-            "Choose a Cryptocurrency for Sentiment & Price Analysis:",
+        # Auswahl einer Kryptowährung für die kombinierte Analyse
+        selected_crypto_sentiment_price = st.selectbox(
+            "Choose a Cryptocurrency for High-Confidence Sentiment & Price:",
             df_prices["crypto"].unique(),
-            index=0,
-            key="sentiment_price_crypto_high_conf"
+            key="sentiment_price_dual"
         )
 
-        # Filtere die hochsicheren Sentiments und Preise für die gewählte Krypto
-        df_sentiment_high_conf = df_crypto[
-            (df_crypto["crypto"] == selected_crypto_price) &
+        # 🔹 Daten für die gewählte Krypto filtern (nur bullish & bearish mit hoher Confidence)
+        df_sentiment_high_conf_filtered = df_crypto[
+            (df_crypto["crypto"] == selected_crypto_sentiment_price) &
             (df_crypto["sentiment"].isin(["bullish", "bearish"])) &
             (df_crypto["sentiment_confidence"] >= CONFIDENCE_THRESHOLD)
-        ].groupby(["comment_date", "sentiment"]).size().unstack(fill_value=0)
+        ].groupby(["comment_date", "sentiment"]).size().unstack(fill_value=0).reset_index()
 
-        df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_price].set_index("date")
+        # 🔹 Preisdaten für dieselbe Krypto filtern
+        df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_sentiment_price]
 
-        # Merge Sentiment & Price Data
-        df_combined = df_sentiment_high_conf.merge(df_price_filtered, left_index=True, right_index=True, how="inner")
+        # 🔹 Sicherstellen, dass beide DataFrames die gleiche Zeitachse haben
+        df_combined_sentiment_price = df_sentiment_high_conf_filtered.merge(
+            df_price_filtered, left_on="comment_date", right_on="date", how="inner"
+        )
 
-        # Plot mit zwei Y-Achsen
+        # 🔹 Visualisierung mit zwei Y-Achsen
         fig, ax1 = plt.subplots(figsize=(10, 5))
 
-        # Sentiment-Plot (linke Achse)
+        # Sentiment-Trends auf linker Achse
         ax1.set_xlabel("Date")
-        ax1.set_ylabel("Sentiment Count", color="tab:blue")
-        df_combined[["bullish", "bearish"]].plot(kind="bar", stacked=True, ax=ax1, alpha=0.6, color=["green", "red"])
-        ax1.tick_params(axis="y", labelcolor="tab:blue")
+        ax1.set_ylabel("High-Confidence Sentiment Count", color="blue")
+        ax1.plot(df_combined_sentiment_price["comment_date"], df_combined_sentiment_price["bullish"], 
+                color="green", label="Bullish (High Confidence)", alpha=0.7)
+        ax1.plot(df_combined_sentiment_price["comment_date"], df_combined_sentiment_price["bearish"], 
+                color="red", label="Bearish (High Confidence)", alpha=0.7)
+        ax1.tick_params(axis="y", labelcolor="blue")
+        ax1.legend(loc="upper left")
 
-        # Preis-Plot (rechte Achse)
+        # Preis auf rechter Achse
         ax2 = ax1.twinx()
-        ax2.set_ylabel("Price (USD)", color="tab:orange")
-        df_combined["price"].plot(ax=ax2, color="orange", linewidth=2, label="Price")
-        ax2.tick_params(axis="y", labelcolor="tab:orange")
+        ax2.set_ylabel("Price (USD)", color="black")
+        ax2.plot(df_combined_sentiment_price["comment_date"], df_combined_sentiment_price["price"], 
+                color="black", label="Price", linewidth=2)
+        ax2.tick_params(axis="y", labelcolor="black")
+        ax2.legend(loc="upper right")
 
-        # Titel & Legende
+        # Titel & Layout
+        fig.suptitle(f"High-Confidence Sentiment & Price for {selected_crypto_sentiment_price} Over Time")
         fig.tight_layout()
         st.pyplot(fig)
 
+        
 # 🔹 **💹 STOCK MARKET ANALYSIS**
 with tab_stocks:
     st.title("💹 Stock Market Analysis (Coming Soon)")
