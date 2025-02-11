@@ -11,12 +11,12 @@ st.set_page_config(page_title="Reims-Reddit Financial Data Dashboard", layout="c
 # 📌 Google Drive File IDs for datasets
 MERGED_CRYPTO_CSV_ID = "10Ft5DpBI-B3tBfU5wOVzGRj_vwT7TNxa"
 CRYPTO_PRICES_CSV_ID = "10kP3Yol0RG7oXZJYwYqgze4VfXPrshaH"
-MERGED_STOCK_CSV_ID = "STOCK_FILE_ID"  # Replace when stock data is available
+
 
 # 📌 Local filenames
-MERGED_CRYPTO_CSV = "reddit_merged_crypto.csv"
+MERGED_CRYPTO_CSV = "reddit_merged.csv"
 CRYPTO_PRICES_CSV = "crypto_prices.csv"
-MERGED_STOCK_CSV = "stock_data.csv"
+
 
 # 🔹 Function to Download CSV from Google Drive
 @st.cache_data
