@@ -77,15 +77,32 @@ tab_home, tab_crypto, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "�
 
 # 🔹 **🏠 HOME (README)**
 with tab_home:
-    st.title("📊 Financial Sentiment Dashboard")
+    st.title("📊 Reims-Reddit Financial Sentiment Dashboard")
     st.markdown("""
-        **This dashboard provides insights into financial sentiment trends using Reddit discussions.**
-        
-        - **📈 Crypto Data:** Sentiment Analysis, Activity & Trends    
-        - **💹 Stock Market Data (Coming Soon)**  
+        ## 🔍 Project Overview
+        This dashboard provides a **data-driven analysis of cryptocurrency sentiment** using **Reddit discussions** and **historical price data** starting from November 2024. The project integrates multiple data sources to explore the relationship between social sentiment and market trends.
 
-        🔄 **Data is regularly updated to reflect the latest trends.**
+        ### 📊 **Data Sources & Processing**
+        - **Reddit Comments & Posts:** Scraped weekly from multiple subreddits using a **custom Reddit scraper**.  
+        - **Sentiment Analysis:** Applied **CryptoBERT** for a **bullish-bearish-neutral classification** with confidence scores.  
+        - **Historical Price Data:** Collected from **CoinGecko API** for major cryptocurrencies.  
+        - **Data Storage:** Merged sentiment and price data is stored and updated weekly in **Google Drive**.
+
+        ### 🔎 **Key Features**
+        - **📈 Crypto Sentiment Analysis:**  
+          - Top mentioned cryptocurrencies & sentiment distribution  
+          - Sentiment trends over time (overall & high-confidence)  
+          - Word count trends for selected cryptos    
+        - **💹 Stock Market Analysis (Coming Soon)**  
+
+        ### 🔄 **Update Frequency**
+        - **Reddit data & sentiment analysis:** Weekly  
+        - **Crypto price data:** Weekly  
+
+        ---
+        🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
     """)
+
 
 # 🔹 **📈 CRYPTOCURRENCY ANALYSIS**
 with tab_crypto:
