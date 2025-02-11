@@ -92,7 +92,8 @@ with tab_home:
         - **📈 Crypto Sentiment Analysis:**  
           - Top mentioned cryptocurrencies & sentiment distribution  
           - Sentiment trends over time (overall & high-confidence)  
-          - Word count trends for selected cryptos    
+          - Word count trends for selected cryptos
+          - Combined analysis of sentiment & price dynamics    
         - **💹 Stock Market Analysis (Coming Soon)**  
 
         ### 🔄 **Update Frequency**
@@ -118,8 +119,30 @@ with tab_crypto:
 
         # 🔹 **2️⃣ Sentiment Distribution per Crypto**
         st.subheader("💡 Sentiment Distribution of Cryptos")
+
+        # Berechne absolute Werte
         sentiment_distribution = df_crypto.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
-        st.bar_chart(sentiment_distribution)
+
+        # Berechne die Prozentwerte je Coin
+        sentiment_distribution_percent = sentiment_distribution.div(sentiment_distribution.sum(axis=1), axis=0) * 100
+
+        # Visualisierung mit Prozentangaben
+        import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sentiment_distribution_percent.plot(kind="bar", stacked=True, ax=ax)
+
+        # Prozentwerte in den Balken anzeigen
+        for container in ax.containers:
+            ax.bar_label(container, fmt="%.1f%%", label_type="center", fontsize=10, color="white")
+
+        ax.set_ylabel("Sentiment (%)")
+        ax.set_xlabel("Crypto")
+        ax.set_title("Sentiment Distribution per Crypto")
+        ax.legend(title="Sentiment")
+
+        st.pyplot(fig)
+
 
         # **Word Count Over Time**
         st.subheader("📝 Word Count Evolution Over Time")
