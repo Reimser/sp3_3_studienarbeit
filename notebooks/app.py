@@ -73,7 +73,7 @@ df_crypto = load_crypto_data()
 df_prices = load_crypto_prices()
 
 # 📊 **Multi-Tab Navigation**
-tab_home, tab_crypto, tab_prices, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💹 Stock Data"])
+tab_home, tab_crypto, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💹 Stock Data"])
 
 # 🔹 **🏠 HOME (README)**
 with tab_home:
@@ -86,7 +86,7 @@ with tab_home:
 
         🔄 **Data is regularly updated to reflect the latest trends.**
     """)
-    
+
 # 🔹 **📈 CRYPTOCURRENCY ANALYSIS**
 with tab_crypto:
     st.title("📈 Crypto Sentiment Dashboard")
