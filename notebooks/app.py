@@ -194,6 +194,35 @@ with tab_crypto:
         # Bar Chart in Streamlit
         st.bar_chart(sentiment_dist_high_conf)
 
+
+        # 🔹 **3️⃣ Sentiment Trend Over Time (High Confidence Only)**
+        st.subheader("📅 Sentiment Trend Over Time (Only High Confidence)")
+
+        # Wähle einen Confidence-Threshold (z. B. 0.8)
+        CONFIDENCE_THRESHOLD = 0.8
+
+        # Auswahl der Kryptowährung
+        crypto_options = df_crypto["crypto"].unique().tolist()
+        selected_crypto = st.selectbox(
+            "Choose a Cryptocurrency for High Confidence Sentiment:",
+            crypto_options,
+            index=0,
+            key="sentiment_crypto_high_conf"
+        )
+
+        # Filtere nur bullish & bearish Sentiments mit hoher Confidence
+        df_filtered_high_conf = df_crypto[
+            (df_crypto["crypto"] == selected_crypto) &
+            (df_crypto["sentiment"].isin(["bullish", "bearish"])) &
+            (df_crypto["sentiment_confidence"] >= CONFIDENCE_THRESHOLD)
+        ]
+
+        if df_filtered_high_conf.empty:
+            st.warning("⚠️ No high-confidence sentiment data available for the selected cryptocurrency.")
+        else:
+            df_time_high_conf = df_filtered_high_conf.groupby(["comment_date", "sentiment"]).size().unstack(fill_value=0)
+            st.line_chart(df_time_high_conf)
+
 # 🔹 **💹 STOCK MARKET ANALYSIS**
 with tab_stocks:
     st.title("💹 Stock Market Analysis (Coming Soon)")
