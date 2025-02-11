@@ -77,7 +77,7 @@ tab_home, tab_crypto, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "�
 
 # 🔹 **🏠 HOME (README)**
 with tab_home:
-    st.title("📊 Reims-Reddit Financial Sentiment Dashboard")
+    st.title("📊 Reddit Financial Sentiment Dashboard")
     st.markdown("""
         ## 🔍 Project Overview
         This dashboard provides a **data-driven analysis of cryptocurrency sentiment** using **Reddit discussions** and **historical price data** starting from November 2024. The project integrates multiple data sources to explore the relationship between social sentiment and market trends.
@@ -119,29 +119,8 @@ with tab_crypto:
 
         # 🔹 **2️⃣ Sentiment Distribution per Crypto**
         st.subheader("💡 Sentiment Distribution of Cryptos")
-
-        # Berechne absolute Werte
         sentiment_distribution = df_crypto.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
-
-        # Berechne die Prozentwerte je Coin
-        sentiment_distribution_percent = sentiment_distribution.div(sentiment_distribution.sum(axis=1), axis=0) * 100
-
-        # Visualisierung mit Prozentangaben
-        import matplotlib.pyplot as plt
-
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sentiment_distribution_percent.plot(kind="bar", stacked=True, ax=ax)
-
-        # Prozentwerte in den Balken anzeigen
-        for container in ax.containers:
-            ax.bar_label(container, fmt="%.1f%%", label_type="center", fontsize=10, color="white")
-
-        ax.set_ylabel("Sentiment (%)")
-        ax.set_xlabel("Crypto")
-        ax.set_title("Sentiment Distribution per Crypto")
-        ax.legend(title="Sentiment")
-
-        st.pyplot(fig)
+        st.bar_chart(sentiment_distribution)
 
 
         # **Word Count Over Time**
