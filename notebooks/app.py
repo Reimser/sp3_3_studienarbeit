@@ -113,7 +113,8 @@ with tab_crypto:
         # 🔹 **3️⃣ Sentiment Trend Over Time (Based on Comments)**
         st.subheader("📅 Sentiment Trend Over Time (Comments)")
         crypto_options = df_crypto["crypto"].unique().tolist()
-        selected_crypto = st.selectbox("Choose a Cryptocurrency:", crypto_options, index=0)
+        selected_crypto = st.selectbox("Choose a Cryptocurrency for Sentiment:", crypto_options, index=0, key="sentiment_crypto")
+
 
         df_filtered = df_crypto[(df_crypto["crypto"] == selected_crypto) & (df_crypto["sentiment"] != "neutral")]
 
@@ -131,7 +132,7 @@ with tab_prices:
         st.warning("⚠️ No Crypto Price Data Available.")
     else:
         st.subheader("📈 Historical Crypto Prices")
-        selected_price_crypto = st.selectbox("Choose a Cryptocurrency:", df_prices["crypto"].unique())
+        selected_price_crypto = st.selectbox("Choose a Cryptocurrency for Price Data:", df_prices["crypto"].unique(), key="price_crypto")
 
         df_price_filtered = df_prices[df_prices["crypto"] == selected_price_crypto]
         st.line_chart(df_price_filtered.set_index("date")["price"])
