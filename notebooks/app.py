@@ -103,9 +103,21 @@ with tab_home:
         ---
         🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
     """)
-    if st.button("🔄 Clear Cache & Refresh Data"):
-        st.cache_data.clear()
-        st.warning("Cache cleared! Please refresh the page manually (Ctrl + R or Cmd + R).")
+    # 🔄 **Refresh Button**
+if st.button("🔄 Refresh Data"):
+    # Lösche die vorhandene Datei, um sicherzugehen, dass neue Daten geladen werden
+    if os.path.exists(MERGED_CRYPTO_CSV):
+        os.remove(MERGED_CRYPTO_CSV)
+
+    # Lade die neue Datei herunter
+    download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
+
+    # Lade die neuen Daten in den DataFrame
+    df_crypto = load_crypto_data()
+
+    # Lösche den Cache und erzwinge das Neuladen der App
+    st.cache_data.clear()
+    st.rerun()
 
 
 
