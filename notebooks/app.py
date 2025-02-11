@@ -105,7 +105,7 @@ with tab_home:
     """)
     if st.button("🔄 Clear Cache & Reload Data"):
         st.cache_data.clear()
-        st.experimental_rerun()
+        st.rerun()
 
 
 # 🔹 **📈 CRYPTOCURRENCY ANALYSIS**
