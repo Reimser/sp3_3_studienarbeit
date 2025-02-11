@@ -201,17 +201,24 @@ with tab_prices:
         # Gruppieren nach Crypto & Sentiment für den Mittelwert der 3-Tages-Preisveränderung
         df_sentiment_price_change = df_extreme_sentiment.groupby(["crypto", "sentiment"])["price_change_3d"].mean().unstack()
 
-        # 🔹 **NaN-Werte durch 0 ersetzen**
-        df_sentiment_price_change = df_sentiment_price_change.fillna(0)
+        # 🔹 **Fix: Nur numerische Werte behalten & NaN durch 0 ersetzen**
+        df_sentiment_price_change = df_sentiment_price_change.apply(pd.to_numeric, errors='coerce').fillna(0)
 
         # Heatmap-Visualisierung
         fig, ax = plt.subplots(figsize=(10, 5))
-        sns.heatmap(df_sentiment_price_change * 100, annot=True, fmt=".2f%%", cmap="RdYlGn", linewidths=0.5, ax=ax)
+        sns.heatmap(df_sentiment_price_change * 100, annot=True, fmt=".2f", cmap="RdYlGn", linewidths=0.5, ax=ax)
+
+        # 🔹 **Achsentitel & Labels**
         ax.set_title("Average 3-Day Price Change Based on Extreme Sentiment")
         ax.set_xlabel("Sentiment Type")
         ax.set_ylabel("Cryptocurrency")
-        
+
+        # 🔹 **Fix: Prozentzeichen in Achsentitel statt in `fmt`**
+        for text in ax.texts:
+            text.set_text(text.get_text() + "%")  # Prozentzeichen an jede Zelle anhängen
+
         st.pyplot(fig)
+
 
 
 # 🔹 **💹 STOCK MARKET ANALYSIS**
