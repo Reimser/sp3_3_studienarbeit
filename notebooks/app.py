@@ -189,7 +189,7 @@ with tab_prices:
         # Kombination mit Sentiment-Daten
         df_combined = df_crypto.merge(df_prices, left_on=["comment_date", "crypto"], right_on=["date", "crypto"], how="inner")
 
-        # Berechnung der Sentiment-Perzentile
+        # Berechnung der Sentiment-Perzentile (Top 10% & Bottom 10%)
         lower_threshold = df_combined["sentiment_score"].quantile(0.1)  # Unterste 10%
         upper_threshold = df_combined["sentiment_score"].quantile(0.9)  # Oberste 10%
 
@@ -201,6 +201,9 @@ with tab_prices:
         # Gruppieren nach Crypto & Sentiment für den Mittelwert der 3-Tages-Preisveränderung
         df_sentiment_price_change = df_extreme_sentiment.groupby(["crypto", "sentiment"])["price_change_3d"].mean().unstack()
 
+        # 🔹 **NaN-Werte durch 0 ersetzen**
+        df_sentiment_price_change = df_sentiment_price_change.fillna(0)
+
         # Heatmap-Visualisierung
         fig, ax = plt.subplots(figsize=(10, 5))
         sns.heatmap(df_sentiment_price_change * 100, annot=True, fmt=".2f%%", cmap="RdYlGn", linewidths=0.5, ax=ax)
@@ -209,6 +212,7 @@ with tab_prices:
         ax.set_ylabel("Cryptocurrency")
         
         st.pyplot(fig)
+
 
 # 🔹 **💹 STOCK MARKET ANALYSIS**
 with tab_stocks:
