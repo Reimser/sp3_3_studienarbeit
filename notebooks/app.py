@@ -74,7 +74,7 @@ df_prices = load_crypto_prices()
 
 # 📊 Multi-Tab Navigation mit Kategorien
 tab_top, tab_new, tab_meme, tab_other = st.tabs([
-    "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins","💹 Stock Data"
+    "Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins","💹 Stock Data"
 ])
 
 # 🔹 **🏠 HOME (README)**
