@@ -4,7 +4,7 @@ import gdown
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+st.cache_data.clear()
 # 📌 Streamlit Page Configuration
 st.set_page_config(page_title="Reims-Reddit Financial Data Dashboard", layout="centered")
 
@@ -82,7 +82,6 @@ import ast
 df_crypto["detected_crypto"] = df_crypto["detected_crypto"].apply(
     lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else []
 )
-
 # 📊 Multi-Tab Navigation mit Kategorien
 tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
     "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins","💹 Stock Data"
