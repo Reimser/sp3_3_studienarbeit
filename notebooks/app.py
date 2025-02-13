@@ -44,8 +44,8 @@ def load_crypto_data():
 
     df_crypto = pd.read_csv(MERGED_CRYPTO_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # 📌 Debugging: Spalten ausgeben
-    print("📌 Spalten in df_crypto:", df_crypto.columns.tolist())
+    # 📌 Debugging: Spalten nach dem Laden ausgeben
+    print("📌 Spalten in df_crypto NACH dem Laden:", df_crypto.columns.tolist())
 
     # 🔹 Sicherstellen, dass die `date`-Spalte existiert
     if "date" not in df_crypto.columns:
@@ -111,6 +111,7 @@ print(df_crypto.head())
 
 print("🔍 Erste Zeilen von df_prices:")
 print(df_prices.head())
+
 
 
 # 📊 Multi-Tab Navigation mit Kategorien
