@@ -7,26 +7,26 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # 📌 Streamlit Page Configuration
-st.set_page_config(page_title="Reims-Reddit Financial Data Dashboard", layout="centered")
+st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
 
-# 📌 Google Drive File IDs for datasets
-MERGED_CRYPTO_CSV_ID = "116jsiHjV_admQrvyTqR02hH8x6QK0v_g"
+# 🚀 **Cache zurücksetzen, um alte Daten zu vermeiden**
+st.cache_data.clear()
+
+# 📌 Google Drive File IDs für die Datensätze
+MERGED_CRYPTO_CSV_ID = "117G8MGV-KgKQ9S5D-YT4WKwLQCpiq7QI"
 CRYPTO_PRICES_CSV_ID = "10wkptEC82rQDttx2zMFrl7r4sYgkx421"
 
-# 📌 Local filenames
+# 📌 Lokale Dateinamen
 MERGED_CRYPTO_CSV = "reddit_merged.csv"
 CRYPTO_PRICES_CSV = "crypto_prices.csv"
 
-# 🔹 Function to Download CSV from Google Drive
+# 🔹 Funktion zum Herunterladen von CSV-Dateien von Google Drive
 @st.cache_data
 def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
-# 🔹 Lösche den Cache vor dem Neuladen der Daten
-st.cache_data.clear()
-
-# 🔹 Prüfe, ob Dateien existieren, bevor sie geladen werden
+# 🔹 Sicherstellen, dass Dateien existieren
 if not os.path.exists(MERGED_CRYPTO_CSV):
     print(f"📥 Downloading {MERGED_CRYPTO_CSV} from Google Drive...")
     download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
@@ -35,64 +35,73 @@ if not os.path.exists(CRYPTO_PRICES_CSV):
     print(f"📥 Downloading {CRYPTO_PRICES_CSV} from Google Drive...")
     download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
 
-# 🔹 Function to Load Crypto Sentiment Data
+# 🔹 Funktion zum Laden der Crypto-Daten
 @st.cache_data
 def load_crypto_data():
     if not os.path.exists(MERGED_CRYPTO_CSV):
-        st.error(f"File {MERGED_CRYPTO_CSV} not found!")
+        st.error(f"❌ Datei nicht gefunden: {MERGED_CRYPTO_CSV}")
         return pd.DataFrame()
-    
+
     df_crypto = pd.read_csv(MERGED_CRYPTO_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # Debugging: Prüfe Spalten
+    # 📌 Debugging: Spalten ausgeben
     print("📌 Spalten in df_crypto:", df_crypto.columns.tolist())
 
-    # Sicherstellen, dass 'date' existiert
+    # 🔹 Sicherstellen, dass die `date`-Spalte existiert
     if "date" not in df_crypto.columns:
         raise KeyError(f"❌ 'date' fehlt! Verfügbare Spalten: {df_crypto.columns.tolist()}")
 
-    # Konvertiere `date` zu datetime
+    # 🔹 `date` in datetime-Format umwandeln
     df_crypto["date"] = pd.to_datetime(df_crypto["date"], errors="coerce")
 
-    # Konvertiere `detected_crypto` von String zu Liste
+    # 🔹 `detected_crypto`-Spalte sicher als Liste speichern
     if "detected_crypto" in df_crypto.columns:
         df_crypto["detected_crypto"] = df_crypto["detected_crypto"].apply(
             lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else []
         )
     else:
-        st.warning("⚠️ 'detected_crypto' column not found!")
+        st.warning("⚠️ 'detected_crypto' Spalte fehlt!")
 
-    # Konvertiere Sentiment in numerische Werte
-    df_crypto["sentiment_score"] = df_crypto["sentiment"].map({"bullish": 1, "neutral": 0, "bearish": -1})
+    # 🔹 Sentiment in numerische Werte umwandeln
+    sentiment_mapping = {"bullish": 1, "neutral": 0, "bearish": -1}
+    df_crypto["sentiment_score"] = df_crypto["sentiment"].map(sentiment_mapping)
 
     return df_crypto
 
-# 🔹 Function to Load Crypto Prices Data
+# 🔹 Funktion zum Laden der Crypto-Preisdaten
 @st.cache_data
 def load_crypto_prices():
     if not os.path.exists(CRYPTO_PRICES_CSV):
-        st.error(f"File {CRYPTO_PRICES_CSV} not found!")
+        st.error(f"❌ Datei nicht gefunden: {CRYPTO_PRICES_CSV}")
         return pd.DataFrame()
-    
+
     df_prices = pd.read_csv(CRYPTO_PRICES_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # Debugging: Print available columns
-    print("📝 Columns in df_prices:", df_prices.columns.tolist())
+    # 📌 Debugging: Spalten ausgeben
+    print("📝 Spalten in df_prices:", df_prices.columns.tolist())
 
-    # Ensure no hidden spaces in column names
+    # 🔹 Leere Zeichen entfernen
     df_prices.columns = df_prices.columns.str.strip()
 
-    # Convert date column to datetime format
+    # 🔹 Sicherstellen, dass `date` existiert und umwandeln
     if "date" in df_prices.columns:
         df_prices["date"] = pd.to_datetime(df_prices["date"], errors="coerce")
     else:
-        raise KeyError(f"⚠️ 'date' column missing! Available columns: {df_prices.columns.tolist()}")
+        raise KeyError(f"⚠️ 'date' Spalte fehlt! Verfügbare Spalten: {df_prices.columns.tolist()}")
 
     return df_prices
 
 # 📌 Lade die Daten
 df_crypto = load_crypto_data()
 df_prices = load_crypto_prices()
+
+# 📊 Debugging: Zeige erste Zeilen der geladenen DataFrames
+print("🔍 Erste Zeilen von df_crypto:")
+print(df_crypto.head())
+
+print("🔍 Erste Zeilen von df_prices:")
+print(df_prices.head())
+
 
 # Debugging: Zeige die ersten Zeilen des geladenen DataFrames
 print(df_crypto.head())
