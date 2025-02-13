@@ -8,6 +8,9 @@ import seaborn as sns
 # 📌 Streamlit Page Configuration
 st.set_page_config(page_title="Reims-Reddit Financial Data Dashboard", layout="centered")
 
+import gdown
+import os
+
 # 📌 Google Drive File IDs for datasets
 MERGED_CRYPTO_CSV_ID = "116jsiHjV_admQrvyTqR02hH8x6QK0v_g"
 CRYPTO_PRICES_CSV_ID = "10wkptEC82rQDttx2zMFrl7r4sYgkx421"
@@ -21,6 +24,15 @@ CRYPTO_PRICES_CSV = "crypto_prices.csv"
 def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
+
+# 🔹 Ensure files exist before loading
+if not os.path.exists(MERGED_CRYPTO_CSV):
+    print(f"📥 Downloading {MERGED_CRYPTO_CSV} from Google Drive...")
+    download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
+
+if not os.path.exists(CRYPTO_PRICES_CSV):
+    print(f"📥 Downloading {CRYPTO_PRICES_CSV} from Google Drive...")
+    download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
 
 # 🔹 Function to Load Crypto Sentiment Data
 @st.cache_data
