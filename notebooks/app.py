@@ -55,8 +55,8 @@ def load_crypto_data():
     # 🔹 `detected_crypto` sicher als Liste speichern
     if "detected_crypto" in df_crypto.columns:
         df_crypto["detected_crypto"] = df_crypto["detected_crypto"].apply(
-            lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else []
-        )
+    lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else []
+)
     else:
         st.warning("⚠️ 'detected_crypto' Spalte fehlt!")
 
@@ -152,10 +152,12 @@ def crypto_analysis_tab(tab, category, crypto_list):
 
         # 🔹 Korrekte Filterung
         df_filtered = df_crypto[df_crypto["detected_crypto"].apply(lambda x: selected_crypto in x)]
+
         
-        # 🔹 Debugging: Zeige die ersten Zeilen nach der Filterung
         st.write(f"📊 {category} - Verfügbare Daten für {selected_crypto}:")
-        st.write(df_filtered.head())
+        st.write(df_filtered.head())  # Debugging: Zeige die ersten Zeilen
+        st.write(f"Anzahl der Zeilen nach Filterung: {len(df_filtered)}")
+
 
         # 🔹 Falls keine Daten vorhanden sind, direkt stoppen
         if df_filtered.empty:
