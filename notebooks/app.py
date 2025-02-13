@@ -2,11 +2,9 @@ import streamlit as st
 import pandas as pd
 import gdown
 import os
+import ast
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-# 🚀 **Lösche den gesamten Cache!**
-st.cache_data.clear()
 
 # 📌 Streamlit Page Configuration
 st.set_page_config(page_title="Reims-Reddit Financial Data Dashboard", layout="centered")
@@ -25,7 +23,10 @@ def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
-# 🔹 Ensure files exist before loading
+# 🔹 Lösche den Cache vor dem Neuladen der Daten
+st.cache_data.clear()
+
+# 🔹 Prüfe, ob Dateien existieren, bevor sie geladen werden
 if not os.path.exists(MERGED_CRYPTO_CSV):
     print(f"📥 Downloading {MERGED_CRYPTO_CSV} from Google Drive...")
     download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
@@ -42,13 +43,28 @@ def load_crypto_data():
         return pd.DataFrame()
     
     df_crypto = pd.read_csv(MERGED_CRYPTO_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
-    
-    # Convert date column
+
+    # Debugging: Prüfe Spalten
+    print("📌 Spalten in df_crypto:", df_crypto.columns.tolist())
+
+    # Sicherstellen, dass 'date' existiert
+    if "date" not in df_crypto.columns:
+        raise KeyError(f"❌ 'date' fehlt! Verfügbare Spalten: {df_crypto.columns.tolist()}")
+
+    # Konvertiere `date` zu datetime
     df_crypto["date"] = pd.to_datetime(df_crypto["date"], errors="coerce")
-    
-    # Convert Sentiment Labels into Numeric Scores
+
+    # Konvertiere `detected_crypto` von String zu Liste
+    if "detected_crypto" in df_crypto.columns:
+        df_crypto["detected_crypto"] = df_crypto["detected_crypto"].apply(
+            lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else []
+        )
+    else:
+        st.warning("⚠️ 'detected_crypto' column not found!")
+
+    # Konvertiere Sentiment in numerische Werte
     df_crypto["sentiment_score"] = df_crypto["sentiment"].map({"bullish": 1, "neutral": 0, "bearish": -1})
-    
+
     return df_crypto
 
 # 🔹 Function to Load Crypto Prices Data
@@ -59,32 +75,28 @@ def load_crypto_prices():
         return pd.DataFrame()
     
     df_prices = pd.read_csv(CRYPTO_PRICES_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
-    
+
     # Debugging: Print available columns
     print("📝 Columns in df_prices:", df_prices.columns.tolist())
-    
+
     # Ensure no hidden spaces in column names
     df_prices.columns = df_prices.columns.str.strip()
-    
+
     # Convert date column to datetime format
     if "date" in df_prices.columns:
         df_prices["date"] = pd.to_datetime(df_prices["date"], errors="coerce")
     else:
         raise KeyError(f"⚠️ 'date' column missing! Available columns: {df_prices.columns.tolist()}")
-    
+
     return df_prices
 
-
-# 📌 Load Data
+# 📌 Lade die Daten
 df_crypto = load_crypto_data()
 df_prices = load_crypto_prices()
 
-import ast
+# Debugging: Zeige die ersten Zeilen des geladenen DataFrames
+print(df_crypto.head())
 
-# Konvertiere `detected_crypto` von String zu echter Liste
-df_crypto["detected_crypto"] = df_crypto["detected_crypto"].apply(
-    lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else []
-)
 # 📊 Multi-Tab Navigation mit Kategorien
 tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
     "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins","💹 Stock Data"
