@@ -8,9 +8,6 @@ import seaborn as sns
 # 📌 Streamlit Page Configuration
 st.set_page_config(page_title="Reims-Reddit Financial Data Dashboard", layout="centered")
 
-import gdown
-import os
-
 # 📌 Google Drive File IDs for datasets
 MERGED_CRYPTO_CSV_ID = "116jsiHjV_admQrvyTqR02hH8x6QK0v_g"
 CRYPTO_PRICES_CSV_ID = "10wkptEC82rQDttx2zMFrl7r4sYgkx421"
@@ -79,6 +76,16 @@ def load_crypto_prices():
 df_crypto = load_crypto_data()
 df_prices = load_crypto_prices()
 
+import ast
+
+# Konvertiere `detected_crypto` von String zu echter Liste
+df_crypto["detected_crypto"] = df_crypto["detected_crypto"].apply(
+    lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else []
+)
+print(type(df_crypto["detected_crypto"].iloc[0]))  # Sollte jetzt <class 'list'> ausgeben
+print(df_crypto["detected_crypto"].head(10))  # Zeigt die ersten Werte
+
+
 # 📊 Multi-Tab Navigation mit Kategorien
 tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
     "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins","💹 Stock Data"
@@ -137,7 +144,7 @@ def crypto_analysis_tab(tab, category, crypto_list):
         selected_crypto = st.selectbox(f"Choose a {category} Coin:", crypto_list, key=f"{category.lower()}_crypto")
 
         df_filtered = df_crypto[df_crypto["detected_crypto"].apply(lambda x: selected_crypto in x if isinstance(x, list) else False)]
-        
+
         if df_filtered.empty:
             st.warning(f"⚠️ No data available for {selected_crypto}.")
         else:
