@@ -9,7 +9,7 @@ import seaborn as sns
 # 📌 Streamlit Page Configuration
 st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
 
-# 🚀 **Cache zurücksetzen, um alte Daten zu vermeiden**
+# 🚀 **Cache leeren, um alte Daten zu vermeiden**
 st.cache_data.clear()
 
 # 📌 Google Drive File IDs für die Datensätze
@@ -23,38 +23,37 @@ CRYPTO_PRICES_CSV = "crypto_prices.csv"
 # 🔹 Funktion zum Herunterladen von CSV-Dateien von Google Drive
 @st.cache_data
 def download_csv(file_id, output):
+    """Lädt eine Datei von Google Drive herunter."""
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
 # 🔹 Sicherstellen, dass Dateien existieren
-if not os.path.exists(MERGED_CRYPTO_CSV):
-    print(f"📥 Downloading {MERGED_CRYPTO_CSV} from Google Drive...")
-    download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
-
-if not os.path.exists(CRYPTO_PRICES_CSV):
-    print(f"📥 Downloading {CRYPTO_PRICES_CSV} from Google Drive...")
-    download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
+for file_id, filename in [(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV), (CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)]:
+    if not os.path.exists(filename):
+        print(f"📥 Downloading {filename} from Google Drive...")
+        download_csv(file_id, filename)
 
 # 🔹 Funktion zum Laden der Crypto-Daten
 @st.cache_data
 def load_crypto_data():
+    """Lädt die Reddit Crypto-Daten."""
     if not os.path.exists(MERGED_CRYPTO_CSV):
         st.error(f"❌ Datei nicht gefunden: {MERGED_CRYPTO_CSV}")
         return pd.DataFrame()
 
     df_crypto = pd.read_csv(MERGED_CRYPTO_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # 📌 Debugging: Spalten ausgeben
+    # 🛠 Debugging: Spalten prüfen
     print("📌 Spalten in df_crypto:", df_crypto.columns.tolist())
 
-    # 🔹 Sicherstellen, dass die `date`-Spalte existiert
+    # 🔹 Sicherstellen, dass 'date' existiert
     if "date" not in df_crypto.columns:
         raise KeyError(f"❌ 'date' fehlt! Verfügbare Spalten: {df_crypto.columns.tolist()}")
 
     # 🔹 `date` in datetime-Format umwandeln
     df_crypto["date"] = pd.to_datetime(df_crypto["date"], errors="coerce")
 
-    # 🔹 `detected_crypto`-Spalte sicher als Liste speichern
+    # 🔹 `detected_crypto` als Liste speichern
     if "detected_crypto" in df_crypto.columns:
         df_crypto["detected_crypto"] = df_crypto["detected_crypto"].apply(
             lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else []
@@ -71,16 +70,17 @@ def load_crypto_data():
 # 🔹 Funktion zum Laden der Crypto-Preisdaten
 @st.cache_data
 def load_crypto_prices():
+    """Lädt die Crypto-Preisdaten."""
     if not os.path.exists(CRYPTO_PRICES_CSV):
         st.error(f"❌ Datei nicht gefunden: {CRYPTO_PRICES_CSV}")
         return pd.DataFrame()
 
     df_prices = pd.read_csv(CRYPTO_PRICES_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # 📌 Debugging: Spalten ausgeben
+    # 📌 Debugging: Spalten prüfen
     print("📝 Spalten in df_prices:", df_prices.columns.tolist())
 
-    # 🔹 Leere Zeichen entfernen
+    # 🔹 Entferne unnötige Leerzeichen aus Spaltennamen
     df_prices.columns = df_prices.columns.str.strip()
 
     # 🔹 Sicherstellen, dass `date` existiert und umwandeln
@@ -95,16 +95,12 @@ def load_crypto_prices():
 df_crypto = load_crypto_data()
 df_prices = load_crypto_prices()
 
-# 📊 Debugging: Zeige erste Zeilen der geladenen DataFrames
+# 🔹 Debugging: Zeige die ersten Zeilen der geladenen DataFrames
 print("🔍 Erste Zeilen von df_crypto:")
 print(df_crypto.head())
 
 print("🔍 Erste Zeilen von df_prices:")
 print(df_prices.head())
-
-
-# Debugging: Zeige die ersten Zeilen des geladenen DataFrames
-print(df_crypto.head())
 
 # 📊 Multi-Tab Navigation mit Kategorien
 tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
