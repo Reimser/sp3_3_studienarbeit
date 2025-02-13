@@ -4,7 +4,10 @@ import gdown
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+# 🚀 **Lösche den gesamten Cache!**
 st.cache_data.clear()
+
 # 📌 Streamlit Page Configuration
 st.set_page_config(page_title="Reims-Reddit Financial Data Dashboard", layout="centered")
 
