@@ -69,7 +69,7 @@ df_prices = load_crypto_prices()
 
 # 📊 Multi-Tab Navigation mit Kategorien
 tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
-    "Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins","💹 Stock Data"
+    "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins","💹 Stock Data"
 ])
 
 # 🔹 **🏠 HOME (README)**
@@ -284,7 +284,6 @@ def crypto_analysis_tab(tab, category, crypto_list):
     # ⚡ **Weitere Coins**
     other_coins = ["VeChain", "Render", "Kusama", "Hedera", "Filecoin", "Vulcan Forged PYR", "Illuvium", "Numerai", "Audius", "Kusama",  "Berachain", "The Sandbox", "TestCoin", "Cosmos"]
     crypto_analysis_tab(tab_other, "Weitere Coins", other_coins)
-
 
 # 🔹 **💹 STOCK MARKET ANALYSIS**
 with tab_stocks:
