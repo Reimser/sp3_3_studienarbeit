@@ -82,9 +82,6 @@ import ast
 df_crypto["detected_crypto"] = df_crypto["detected_crypto"].apply(
     lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else []
 )
-print(type(df_crypto["detected_crypto"].iloc[0]))  # Sollte jetzt <class 'list'> ausgeben
-print(df_crypto["detected_crypto"].head(10))  # Zeigt die ersten Werte
-
 
 # 📊 Multi-Tab Navigation mit Kategorien
 tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
