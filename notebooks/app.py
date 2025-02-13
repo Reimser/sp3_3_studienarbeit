@@ -9,7 +9,7 @@ import seaborn as sns
 # 📌 Streamlit Page Configuration
 st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
 
-# 🚀 **Cache zurücksetzen, um alte Daten zu vermeiden**
+# 🚀 **Cache zurücksetzen**
 st.cache_data.clear()
 
 # 📌 Google Drive File IDs für die Datensätze
@@ -27,13 +27,10 @@ def download_csv(file_id, output):
     gdown.download(url, output, quiet=False)
 
 # 🔹 Sicherstellen, dass Dateien existieren
-if not os.path.exists(MERGED_CRYPTO_CSV):
-    print(f"📥 Downloading {MERGED_CRYPTO_CSV} from Google Drive...")
-    download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
-
-if not os.path.exists(CRYPTO_PRICES_CSV):
-    print(f"📥 Downloading {CRYPTO_PRICES_CSV} from Google Drive...")
-    download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
+for file_id, file_name in [(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV), (CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)]:
+    if not os.path.exists(file_name):
+        print(f"📥 Downloading {file_name} from Google Drive...")
+        download_csv(file_id, file_name)
 
 # 🔹 Funktion zum Laden der Crypto-Daten
 @st.cache_data
@@ -44,34 +41,24 @@ def load_crypto_data():
 
     df_crypto = pd.read_csv(MERGED_CRYPTO_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # 📌 Debugging: Spalten nach dem Laden ausgeben
-    print("📌 Spalten in df_crypto NACH dem Laden:", df_crypto.columns.tolist())
+    # 📌 Debugging: Spalten prüfen
+    print("📌 Spalten in df_crypto:", df_crypto.columns.tolist())
 
-    # 🔹 Sicherstellen, dass die `date`-Spalte existiert
+    # 🔹 Sicherstellen, dass `date` existiert
     if "date" not in df_crypto.columns:
         raise KeyError(f"❌ 'date' fehlt! Verfügbare Spalten: {df_crypto.columns.tolist()}")
 
-    # 🔹 `date` in datetime-Format umwandeln & fehlerhafte Werte entfernen
+    # 🔹 `date` in datetime umwandeln & nur gültige Werte behalten
     df_crypto["date"] = pd.to_datetime(df_crypto["date"], errors="coerce")
-    df_crypto = df_crypto.dropna(subset=["date"])  # ❌ Entferne ungültige Datumswerte
+    df_crypto = df_crypto.dropna(subset=["date"])  # Falls `date` leer ist, entfernen
 
-    # 🔹 `detected_crypto`-Spalte sicher als Liste speichern
+    # 🔹 `detected_crypto` sicher als Liste speichern
     if "detected_crypto" in df_crypto.columns:
         df_crypto["detected_crypto"] = df_crypto["detected_crypto"].apply(
             lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else []
         )
     else:
         st.warning("⚠️ 'detected_crypto' Spalte fehlt!")
-
-    # 🔹 Sentiment in numerische Werte umwandeln
-    sentiment_mapping = {"bullish": 1, "neutral": 0, "bearish": -1}
-    df_crypto["sentiment_score"] = df_crypto["sentiment"].map(sentiment_mapping)
-
-    # 🔍 Debugging: Überprüfe die bereinigte `date`-Spalte
-    print("📌 Anzahl der verbleibenden Einträge nach Bereinigung:", len(df_crypto))
-    print("📊 Datentyp der Spalte 'date':", df_crypto["date"].dtype)
-    print("🧐 Erste Werte von 'date':")
-    print(df_crypto["date"].head(10))
 
     return df_crypto
 
@@ -84,13 +71,10 @@ def load_crypto_prices():
 
     df_prices = pd.read_csv(CRYPTO_PRICES_CSV, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-    # 📌 Debugging: Spalten ausgeben
+    # 📌 Debugging: Spalten prüfen
     print("📝 Spalten in df_prices:", df_prices.columns.tolist())
 
-    # 🔹 Leere Zeichen entfernen
-    df_prices.columns = df_prices.columns.str.strip()
-
-    # 🔹 Sicherstellen, dass `date` existiert und umwandeln
+    # 🔹 `date` umwandeln, falls vorhanden
     if "date" in df_prices.columns:
         df_prices["date"] = pd.to_datetime(df_prices["date"], errors="coerce")
     else:
@@ -102,17 +86,12 @@ def load_crypto_prices():
 df_crypto = load_crypto_data()
 df_prices = load_crypto_prices()
 
-# Debugging: Zeige die verfügbaren Spalten
-print("📌 Verfügbare Spalten in df_crypto:", df_crypto.columns.tolist())
-
-# 📊 Debugging: Zeige erste Zeilen der geladenen DataFrames
+# Debugging: Zeige die ersten Zeilen der geladenen DataFrames
 print("🔍 Erste Zeilen von df_crypto:")
 print(df_crypto.head())
 
 print("🔍 Erste Zeilen von df_prices:")
 print(df_prices.head())
-
-
 
 # 📊 Multi-Tab Navigation mit Kategorien
 tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
