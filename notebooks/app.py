@@ -150,17 +150,20 @@ def crypto_analysis_tab(tab, category, crypto_list):
 
         selected_crypto = st.selectbox(f"Choose a {category} Coin:", crypto_list, key=f"{category.lower()}_crypto")
 
+        # 🔹 Korrekte Filterung
         df_filtered = df_crypto[df_crypto["detected_crypto"].apply(lambda x: selected_crypto in x)]
-        # Debugging: Zeige die ersten Zeilen nach der Filterung
+        
+        # 🔹 Debugging: Zeige die ersten Zeilen nach der Filterung
         st.write(f"📊 {category} - Verfügbare Daten für {selected_crypto}:")
         st.write(df_filtered.head())
 
+        # 🔹 Falls keine Daten vorhanden sind, direkt stoppen
         if df_filtered.empty:
             st.warning(f"⚠️ No data available for {selected_crypto}.")
             st.stop()  # Beende hier, damit keine weiteren Fehler auftreten
 
-        if df_filtered.empty:
-            st.warning(f"⚠️ No data available for {selected_crypto}.")
+        # 🔹 Falls Daten vorhanden sind, geht die Analyse hier weiter
+
         else:
             # 🔹 **1️⃣ Most Discussed Cryptos**
             st.subheader("🔥 Top 10 Most Mentioned Cryptocurrencies")
