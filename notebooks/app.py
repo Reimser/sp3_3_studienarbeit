@@ -211,17 +211,20 @@ def crypto_analysis_tab(tab, category, crypto_list):
             st.pyplot(fig)
 
 
-# 📌 **Kategorien für verschiedene Krypto-Typen**
-top_coins = ["Bitcoin", "Ethereum", "Solana", "Avalanche", "Polkadot", "Polygon", "XRP", "Cardano", "Binance Coin"]
+ # 🏆 **Top Coins**
+top_coins = ["Bitcoin", "Ethereum", "Wrapped Ethereum", "Solana", "Avalanche", "Polkadot", "Near Protocol", "Polygon", "XRP", "Cardano", "Cronos",  "Chiliz",  "Ronin", "Band Protocol", "Optimism", "Celestia",  "Aethir", "Sui", "Hyperliquid", "Robinhood Coin", "Trump Coin", "USD Coin", "Binance Coin", "Litecoin", "Dogecoin", "Tron", "Aave", "Hedera",  "Cosmos", "Gala", "Chainlink"]
 crypto_analysis_tab(tab_top, "Top Coins", top_coins)
 
-new_coins = ["Arbitrum", "Starknet", "Injective Protocol", "Sei Network", "Aptos", "EigenLayer"]
+# 📈 **New Coins**
+new_coins = ["Arbitrum", "Starknet", "Injective Protocol", "Sei Network", "Aptos", "EigenLayer", "Mantle", "Immutable X", "Ondo Finance", "Worldcoin", "Aerodrome", "Jupiter", "THORChain", "Pendle", "Kujira", "Noble", "Stride", "Dymension", "Seamless Protocol", "Blast", "Merlin", "Tapioca", "Arcadia Finance", "Notcoin", "Omni Network", "LayerZero", "ZetaChain", "Friend.tech"]
 crypto_analysis_tab(tab_new, "New Coins", new_coins)
 
-meme_coins = ["Shiba Inu", "Pepe", "Floki Inu", "Bonk", "Wojak", "Degen"]
+# 😂 **Meme Coins**
+meme_coins = ["Shiba Inu", "Pepe", "Floki Inu", "Bonk", "Wojak", "Mog Coin", "Doge Killer (Leash)", "Baby Doge Coin", "Degen", "Toshi", "Fartcoin", "Banana", "Kabosu", "Husky", "Samoyedcoin", "Milkbag"]
 crypto_analysis_tab(tab_meme, "Meme Coins", meme_coins)
 
-other_coins = ["VeChain", "Chainlink", "Render", "Kusama", "Hedera", "Filecoin"]
+# ⚡ **Weitere Coins**
+other_coins = ["VeChain", "Render", "Kusama", "Hedera", "Filecoin", "Vulcan Forged PYR", "Illuvium", "Numerai", "Audius", "Kusama",  "Berachain", "The Sandbox", "TestCoin", "Cosmos"]
 crypto_analysis_tab(tab_other, "Weitere Coins", other_coins)
 
 # 🔹 **💹 STOCK MARKET ANALYSIS**
