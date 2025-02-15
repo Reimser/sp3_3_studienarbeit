@@ -3,6 +3,7 @@ import pandas as pd
 import gdown
 import os
 import ast
+import matplotlib.pyplot as plt
 import seaborn as sns
 
 # 📌 Streamlit Page Configuration
@@ -57,7 +58,7 @@ def load_csv(filepath):
 df_crypto = load_csv(MERGED_CRYPTO_CSV)
 df_prices = load_csv(CRYPTO_PRICES_CSV)
 
-# 🔹 Daten korrigieren
+# 🔹 **Daten korrigieren**
 def clean_crypto_data(df):
     """Reinigt die Reddit-Krypto-Daten und setzt den Goldstandard."""
     df = df.copy()
@@ -65,12 +66,12 @@ def clean_crypto_data(df):
     # ✅ `date` in `datetime64` umwandeln
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
-    # ✅ `detected_crypto` von String in echte Liste konvertieren
+    # ✅ `detected_crypto` in echte Listen konvertieren (Falls noch Strings vorhanden sind)
     df["detected_crypto"] = df["detected_crypto"].apply(
         lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else []
     )
 
-    # ✅ `comment_id` NaN durch None ersetzen (optional)
+    # ✅ `comment_id` NaN durch None ersetzen
     df["comment_id"] = df["comment_id"].astype("object").where(df["comment_id"].notna(), None)
 
     return df
@@ -90,7 +91,8 @@ def clean_price_data(df):
 # 📌 Wende die Bereinigung an
 df_crypto = clean_crypto_data(df_crypto)
 df_prices = clean_price_data(df_prices)
-# 📊 Multi-Tab Navigation mit Kategorien
+
+# 📊 **Multi-Tab Navigation mit Kategorien**
 tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
     "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins","💹 Stock Data"
 ])
@@ -100,27 +102,14 @@ with tab_home:
     st.title("📊 Reddit Financial Sentiment Dashboard")
     st.markdown("""
         ## 🔍 Project Overview
-        This dashboard provides a **data-driven analysis of cryptocurrency sentiment** using **Reddit discussions** and **historical price data** starting from November 2024. The project integrates multiple data sources to explore the relationship between social sentiment and market trends.
-
-        ### 📊 **Data Sources & Processing**
-        - **Reddit Comments & Posts:** Scraped weekly from multiple subreddits using a **custom Reddit scraper**.  
-        - **Sentiment Analysis:** Applied **CryptoBERT** for a **bullish-bearish-neutral classification** with confidence scores.  
-        - **Historical Price Data:** Collected from **CoinGecko API** for major cryptocurrencies.  
-        - **Data Storage:** Merged sentiment and price data is stored and updated weekly in **Google Drive**.
+        This dashboard provides a **data-driven analysis of cryptocurrency sentiment** using **Reddit discussions** and **historical price data**.
 
         ### 🔎 **Key Features**
         - **📈 Crypto Sentiment Analysis:**  
           - Top mentioned cryptocurrencies & sentiment distribution  
           - Sentiment trends over time (overall & high-confidence)  
-          - Word count trends for selected cryptos
           - Combined analysis of sentiment & price dynamics    
-        - **💹 Stock Market Analysis (Coming Soon)**  
 
-        ### 🔄 **Update Frequency**
-        - **Reddit data & sentiment analysis:** Weekly  
-        - **Crypto price data:** Weekly  
-
-        ---
         🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
     """)
 
@@ -132,12 +121,12 @@ def crypto_analysis_tab(tab, category, crypto_list):
         
         selected_crypto = st.selectbox(f"Wähle eine {category} Coin:", crypto_list, key=f"{category.lower()}_crypto")
 
-        # 🔹 Debug: Zeige ALLE Werte aus `detected_crypto`, um Fehler zu vermeiden
+        # 🔹 Debug: Zeige ALLE Werte aus `detected_crypto`
         st.write("📊 **Erste Einträge in detected_crypto:**")
         st.write(df_crypto["detected_crypto"].head(10))
 
         # 🔹 Filterung nach gewählter Kryptowährung
-        df_filtered = df_crypto[df_crypto["detected_crypto"].apply(lambda x: selected_crypto in x)]
+        df_filtered = df_crypto[df_crypto["detected_crypto"].apply(lambda x: isinstance(x, list) and selected_crypto in x)]
 
         # 🔹 Debugging: Zeige gefilterte Daten
         st.write(f"📊 {category} - Verfügbare Daten für {selected_crypto}:")
@@ -164,21 +153,18 @@ def crypto_analysis_tab(tab, category, crypto_list):
         sns.boxplot(x=df_filtered["sentiment_confidence"], ax=ax)
         st.pyplot(fig)
 
-        # 🏆 **Top Coins**
-    top_coins = ["Bitcoin", "Ethereum", "Wrapped Ethereum", "Solana", "Avalanche", "Polkadot", "Near Protocol", "Polygon", "XRP", "Cardano", "Cronos",  "Chiliz",  "Ronin", "Band Protocol", "Optimism", "Celestia",  "Aethir", "Sui", "Hyperliquid", "Robinhood Coin", "Trump Coin", "USD Coin", "Binance Coin", "Litecoin", "Dogecoin", "Tron", "Aave", "Hedera",  "Cosmos", "Gala", "Chainlink"]
-    crypto_analysis_tab(tab_top, "Top Coins", top_coins)
+# 📌 **Kategorien für verschiedene Krypto-Typen**
+top_coins = ["Bitcoin", "Ethereum", "Solana", "Avalanche", "Polkadot", "Polygon", "XRP", "Cardano", "Binance Coin"]
+crypto_analysis_tab(tab_top, "Top Coins", top_coins)
 
-    # 📈 **New Coins**
-    new_coins = ["Arbitrum", "Starknet", "Injective Protocol", "Sei Network", "Aptos", "EigenLayer", "Mantle", "Immutable X", "Ondo Finance", "Worldcoin", "Aerodrome", "Jupiter", "THORChain", "Pendle", "Kujira", "Noble", "Stride", "Dymension", "Seamless Protocol", "Blast", "Merlin", "Tapioca", "Arcadia Finance", "Notcoin", "Omni Network", "LayerZero", "ZetaChain", "Friend.tech"]
-    crypto_analysis_tab(tab_new, "New Coins", new_coins)
+new_coins = ["Arbitrum", "Starknet", "Injective Protocol", "Sei Network", "Aptos", "EigenLayer"]
+crypto_analysis_tab(tab_new, "New Coins", new_coins)
 
-    # 😂 **Meme Coins**
-    meme_coins = ["Shiba Inu", "Pepe", "Floki Inu", "Bonk", "Wojak", "Mog Coin", "Doge Killer (Leash)", "Baby Doge Coin", "Degen", "Toshi", "Fartcoin", "Banana", "Kabosu", "Husky", "Samoyedcoin", "Milkbag"]
-    crypto_analysis_tab(tab_meme, "Meme Coins", meme_coins)
+meme_coins = ["Shiba Inu", "Pepe", "Floki Inu", "Bonk", "Wojak", "Degen"]
+crypto_analysis_tab(tab_meme, "Meme Coins", meme_coins)
 
-    # ⚡ **Weitere Coins**
-    other_coins = ["VeChain", "Render", "Kusama", "Hedera", "Filecoin", "Vulcan Forged PYR", "Illuvium", "Numerai", "Audius", "Kusama",  "Berachain", "The Sandbox", "TestCoin", "Cosmos"]
-    crypto_analysis_tab(tab_other, "Weitere Coins", other_coins)
+other_coins = ["VeChain", "Chainlink", "Render", "Kusama", "Hedera", "Filecoin"]
+crypto_analysis_tab(tab_other, "Weitere Coins", other_coins)
 
 # 🔹 **💹 STOCK MARKET ANALYSIS**
 with tab_stocks:
