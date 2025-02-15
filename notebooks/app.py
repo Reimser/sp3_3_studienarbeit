@@ -65,3 +65,52 @@ def load_csv(filepath):
 # 📌 Lade die Daten
 df_crypto = load_csv(MERGED_CRYPTO_CSV)
 df_prices = load_csv(CRYPTO_PRICES_CSV)
+
+# 📊 Multi-Tab Navigation mit Kategorien
+tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
+    "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins","💹 Stock Data"
+])
+
+# 🔹 **🏠 HOME (README)**
+with tab_home:
+    st.title("📊 Reddit Financial Sentiment Dashboard")
+    st.markdown("""
+        ## 🔍 Project Overview
+        This dashboard provides a **data-driven analysis of cryptocurrency sentiment** using **Reddit discussions** and **historical price data** starting from November 2024. The project integrates multiple data sources to explore the relationship between social sentiment and market trends.
+
+        ### 📊 **Data Sources & Processing**
+        - **Reddit Comments & Posts:** Scraped weekly from multiple subreddits using a **custom Reddit scraper**.  
+        - **Sentiment Analysis:** Applied **CryptoBERT** for a **bullish-bearish-neutral classification** with confidence scores.  
+        - **Historical Price Data:** Collected from **CoinGecko API** for major cryptocurrencies.  
+        - **Data Storage:** Merged sentiment and price data is stored and updated weekly in **Google Drive**.
+
+        ### 🔎 **Key Features**
+        - **📈 Crypto Sentiment Analysis:**  
+          - Top mentioned cryptocurrencies & sentiment distribution  
+          - Sentiment trends over time (overall & high-confidence)  
+          - Word count trends for selected cryptos
+          - Combined analysis of sentiment & price dynamics    
+        - **💹 Stock Market Analysis (Coming Soon)**  
+
+        ### 🔄 **Update Frequency**
+        - **Reddit data & sentiment analysis:** Weekly  
+        - **Crypto price data:** Weekly  
+
+        ---
+        🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
+    """)
+    # 🔄 **Refresh Button**
+if st.button("🔄 Refresh Data"):
+    # Lösche die vorhandene Datei, um sicherzugehen, dass neue Daten geladen werden
+    if os.path.exists(MERGED_CRYPTO_CSV):
+        os.remove(MERGED_CRYPTO_CSV)
+
+    # Lade die neue Datei herunter
+    download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
+
+    # Lade die neuen Daten in den DataFrame
+    df_crypto = load_crypto_data()
+
+    # Lösche den Cache und erzwinge das Neuladen der App
+    st.cache_data.clear()
+    st.rerun()
