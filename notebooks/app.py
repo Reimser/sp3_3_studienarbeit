@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import gdown
 import os
-import matplotlib.pyplot as plt
+import ast
 import seaborn as sns
 
 # 📌 Streamlit Page Configuration
@@ -19,7 +19,7 @@ CRYPTO_PRICES_CSV_ID = "10wkptEC82rQDttx2zMFrl7r4sYgkx421"
 MERGED_CRYPTO_CSV = "reddit_merged.csv"
 CRYPTO_PRICES_CSV = "crypto_prices.csv"
 
-# 🔹 Funktion zum Herunterladen von CSV-Dateien von Google Drive
+# 🔹 Funktion zum Herunterladen von CSV-Dateien
 @st.cache_data
 def download_csv(file_id, output):
     """Lädt eine CSV-Datei von Google Drive herunter"""
@@ -35,18 +35,7 @@ if not os.path.exists(CRYPTO_PRICES_CSV):
     print(f"📥 Downloading {CRYPTO_PRICES_CSV} from Google Drive...")
     download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
 
-# 🔍 Überprüfung: Existieren die CSV-Dateien?
-if os.path.exists(MERGED_CRYPTO_CSV):
-    print(f"✅ Datei gefunden: {MERGED_CRYPTO_CSV}")
-else:
-    print(f"❌ Datei fehlt: {MERGED_CRYPTO_CSV}")
-
-if os.path.exists(CRYPTO_PRICES_CSV):
-    print(f"✅ Datei gefunden: {CRYPTO_PRICES_CSV}")
-else:
-    print(f"❌ Datei fehlt: {CRYPTO_PRICES_CSV}")
-
-# 🔹 Funktion zum Laden der CSV-Daten mit Debugging
+# 🔍 **Funktion zum Laden der CSV-Dateien mit Debugging**
 @st.cache_data
 def load_csv(filepath):
     """Lädt eine CSV-Datei und zeigt Debugging-Informationen an"""
@@ -55,17 +44,52 @@ def load_csv(filepath):
         return pd.DataFrame()
 
     df = pd.read_csv(filepath, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
-    
-    # Debugging: Zeige die ersten Zeilen
-    print(f"📌 Spalten in {filepath}: {df.columns.tolist()}")
-    print(df.head())  # Zeige die ersten 5 Zeilen
-    
+
+    # 🔹 Debugging: Spalten und erste Werte anzeigen
+    print(f"\n📌 Datei: {filepath}")
+    print(f"🔹 Spalten: {df.columns.tolist()}")
+    print(df.dtypes)  # Datentypen prüfen
+    print(df.head())   # Erste Zeilen anzeigen
+
     return df
 
-# 📌 Lade die Daten
+# 📌 **Daten laden**
 df_crypto = load_csv(MERGED_CRYPTO_CSV)
 df_prices = load_csv(CRYPTO_PRICES_CSV)
 
+# 🔹 Daten korrigieren
+def clean_crypto_data(df):
+    """Reinigt die Reddit-Krypto-Daten und setzt den Goldstandard."""
+    df = df.copy()
+
+    # ✅ `date` in `datetime64` umwandeln
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+
+    # ✅ `detected_crypto` von String in echte Liste konvertieren
+    df["detected_crypto"] = df["detected_crypto"].apply(
+        lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else []
+    )
+
+    # ✅ `comment_id` NaN durch None ersetzen (optional)
+    df["comment_id"] = df["comment_id"].astype("object").where(df["comment_id"].notna(), None)
+
+    return df
+
+def clean_price_data(df):
+    """Reinigt die Krypto-Preisdaten."""
+    df = df.copy()
+
+    # ✅ `date` in `datetime64` umwandeln
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+
+    # ✅ `price` in `float64` umwandeln
+    df["price"] = pd.to_numeric(df["price"], errors="coerce")
+
+    return df
+
+# 📌 Wende die Bereinigung an
+df_crypto = clean_crypto_data(df_crypto)
+df_prices = clean_price_data(df_prices)
 # 📊 Multi-Tab Navigation mit Kategorien
 tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
     "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins","💹 Stock Data"
@@ -99,36 +123,25 @@ with tab_home:
         ---
         🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
     """)
-    # 🔄 **Refresh Button**
-if st.button("🔄 Refresh Data"):
-    # Lösche die vorhandene Datei, um sicherzugehen, dass neue Daten geladen werden
-    if os.path.exists(MERGED_CRYPTO_CSV):
-        os.remove(MERGED_CRYPTO_CSV)
 
-    # Lade die neue Datei herunter
-    download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
-
-    # Lade die neuen Daten in den DataFrame
-    df_crypto = load_crypto_data()
-
-    # Lösche den Cache und erzwinge das Neuladen der App
-    st.cache_data.clear()
-    st.rerun()
 
 # 📊 **Tabs für verschiedene Krypto-Kategorien**
 def crypto_analysis_tab(tab, category, crypto_list):
     with tab:
         st.title(f"{category} Sentiment & Mentions")
-
-        # Nutzer kann eine Kryptowährung auswählen
+        
         selected_crypto = st.selectbox(f"Wähle eine {category} Coin:", crypto_list, key=f"{category.lower()}_crypto")
 
-        # 🔹 Korrekte Filterung der Kryptowährung (sicherstellen, dass `detected_crypto` eine Liste ist)
-        df_filtered = df_crypto[df_crypto["detected_crypto"].apply(lambda x: isinstance(x, list) and selected_crypto in x)]
+        # 🔹 Debug: Zeige ALLE Werte aus `detected_crypto`, um Fehler zu vermeiden
+        st.write("📊 **Erste Einträge in detected_crypto:**")
+        st.write(df_crypto["detected_crypto"].head(10))
 
-        # Debugging: Zeige gefilterte Daten
+        # 🔹 Filterung nach gewählter Kryptowährung
+        df_filtered = df_crypto[df_crypto["detected_crypto"].apply(lambda x: selected_crypto in x)]
+
+        # 🔹 Debugging: Zeige gefilterte Daten
         st.write(f"📊 {category} - Verfügbare Daten für {selected_crypto}:")
-        st.write(df_filtered.head())  # Debugging: Zeige die ersten Zeilen
+        st.write(df_filtered.head())
         st.write(f"Anzahl der Zeilen nach Filterung: {len(df_filtered)}")
 
         if df_filtered.empty:
@@ -151,18 +164,23 @@ def crypto_analysis_tab(tab, category, crypto_list):
         sns.boxplot(x=df_filtered["sentiment_confidence"], ax=ax)
         st.pyplot(fig)
 
-# 🏆 **Top Coins**
-top_coins = ["Bitcoin", "Ethereum", "Solana", "Avalanche", "Polkadot", "Polygon", "XRP", "Cardano", "Binance Coin"]
-crypto_analysis_tab(tab_top, "Top Coins", top_coins)
+        # 🏆 **Top Coins**
+    top_coins = ["Bitcoin", "Ethereum", "Wrapped Ethereum", "Solana", "Avalanche", "Polkadot", "Near Protocol", "Polygon", "XRP", "Cardano", "Cronos",  "Chiliz",  "Ronin", "Band Protocol", "Optimism", "Celestia",  "Aethir", "Sui", "Hyperliquid", "Robinhood Coin", "Trump Coin", "USD Coin", "Binance Coin", "Litecoin", "Dogecoin", "Tron", "Aave", "Hedera",  "Cosmos", "Gala", "Chainlink"]
+    crypto_analysis_tab(tab_top, "Top Coins", top_coins)
 
-# 📈 **New Coins**
-new_coins = ["Arbitrum", "Starknet", "Injective Protocol", "Sei Network", "Aptos", "EigenLayer"]
-crypto_analysis_tab(tab_new, "New Coins", new_coins)
+    # 📈 **New Coins**
+    new_coins = ["Arbitrum", "Starknet", "Injective Protocol", "Sei Network", "Aptos", "EigenLayer", "Mantle", "Immutable X", "Ondo Finance", "Worldcoin", "Aerodrome", "Jupiter", "THORChain", "Pendle", "Kujira", "Noble", "Stride", "Dymension", "Seamless Protocol", "Blast", "Merlin", "Tapioca", "Arcadia Finance", "Notcoin", "Omni Network", "LayerZero", "ZetaChain", "Friend.tech"]
+    crypto_analysis_tab(tab_new, "New Coins", new_coins)
 
-# 😂 **Meme Coins**
-meme_coins = ["Shiba Inu", "Pepe", "Floki Inu", "Bonk", "Wojak", "Degen"]
-crypto_analysis_tab(tab_meme, "Meme Coins", meme_coins)
+    # 😂 **Meme Coins**
+    meme_coins = ["Shiba Inu", "Pepe", "Floki Inu", "Bonk", "Wojak", "Mog Coin", "Doge Killer (Leash)", "Baby Doge Coin", "Degen", "Toshi", "Fartcoin", "Banana", "Kabosu", "Husky", "Samoyedcoin", "Milkbag"]
+    crypto_analysis_tab(tab_meme, "Meme Coins", meme_coins)
 
-# ⚡ **Weitere Coins**
-other_coins = ["VeChain", "Chainlink", "Render", "Kusama", "Hedera", "Filecoin"]
-crypto_analysis_tab(tab_other, "Weitere Coins", other_coins)
+    # ⚡ **Weitere Coins**
+    other_coins = ["VeChain", "Render", "Kusama", "Hedera", "Filecoin", "Vulcan Forged PYR", "Illuvium", "Numerai", "Audius", "Kusama",  "Berachain", "The Sandbox", "TestCoin", "Cosmos"]
+    crypto_analysis_tab(tab_other, "Weitere Coins", other_coins)
+
+# 🔹 **💹 STOCK MARKET ANALYSIS**
+with tab_stocks:
+    st.title("💹 Stock Market Analysis (Coming Soon)")
+    st.warning("🚧 This section is under development. Stock data will be integrated soon!")
