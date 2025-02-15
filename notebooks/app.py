@@ -114,3 +114,55 @@ if st.button("🔄 Refresh Data"):
     # Lösche den Cache und erzwinge das Neuladen der App
     st.cache_data.clear()
     st.rerun()
+
+# 📊 **Tabs für verschiedene Krypto-Kategorien**
+def crypto_analysis_tab(tab, category, crypto_list):
+    with tab:
+        st.title(f"{category} Sentiment & Mentions")
+
+        # Nutzer kann eine Kryptowährung auswählen
+        selected_crypto = st.selectbox(f"Wähle eine {category} Coin:", crypto_list, key=f"{category.lower()}_crypto")
+
+        # 🔹 Korrekte Filterung der Kryptowährung (sicherstellen, dass `detected_crypto` eine Liste ist)
+        df_filtered = df_crypto[df_crypto["detected_crypto"].apply(lambda x: isinstance(x, list) and selected_crypto in x)]
+
+        # Debugging: Zeige gefilterte Daten
+        st.write(f"📊 {category} - Verfügbare Daten für {selected_crypto}:")
+        st.write(df_filtered.head())  # Debugging: Zeige die ersten Zeilen
+        st.write(f"Anzahl der Zeilen nach Filterung: {len(df_filtered)}")
+
+        if df_filtered.empty:
+            st.warning(f"⚠️ Keine Daten für {selected_crypto} verfügbar.")
+            st.stop()
+
+        # 🔹 **1️⃣ Erwähnungen über die Zeit**
+        st.subheader("📅 Erwähnungen über Zeit")
+        mentions_over_time = df_filtered.groupby("date").size()
+        st.line_chart(mentions_over_time)
+
+        # 🔹 **2️⃣ Sentiment-Verteilung**
+        st.subheader("📊 Sentiment-Verteilung")
+        sentiment_counts = df_filtered["sentiment"].value_counts()
+        st.bar_chart(sentiment_counts)
+
+        # 🔹 **3️⃣ Sentiment Confidence Boxplot**
+        st.subheader("🎯 Sentiment Confidence")
+        fig, ax = plt.subplots(figsize=(8, 4))
+        sns.boxplot(x=df_filtered["sentiment_confidence"], ax=ax)
+        st.pyplot(fig)
+
+# 🏆 **Top Coins**
+top_coins = ["Bitcoin", "Ethereum", "Solana", "Avalanche", "Polkadot", "Polygon", "XRP", "Cardano", "Binance Coin"]
+crypto_analysis_tab(tab_top, "Top Coins", top_coins)
+
+# 📈 **New Coins**
+new_coins = ["Arbitrum", "Starknet", "Injective Protocol", "Sei Network", "Aptos", "EigenLayer"]
+crypto_analysis_tab(tab_new, "New Coins", new_coins)
+
+# 😂 **Meme Coins**
+meme_coins = ["Shiba Inu", "Pepe", "Floki Inu", "Bonk", "Wojak", "Degen"]
+crypto_analysis_tab(tab_meme, "Meme Coins", meme_coins)
+
+# ⚡ **Weitere Coins**
+other_coins = ["VeChain", "Chainlink", "Render", "Kusama", "Hedera", "Filecoin"]
+crypto_analysis_tab(tab_other, "Weitere Coins", other_coins)
