@@ -98,6 +98,13 @@ def clean_price_data(df):
 df_crypto = clean_crypto_data(df_crypto)
 df_prices = clean_price_data(df_prices)
 
+# Debugging: Zeige alle Spaltennamen und Datentypen
+print("📌 Spalten in df_crypto:", df_crypto.columns.tolist())
+print("🔍 Datentypen in df_crypto:")
+print(df_crypto.dtypes)
+print(df_crypto.head())  # Erste Zeilen zur Überprüfung
+
+
 # 📊 **Multi-Tab Navigation mit Kategorien**
 tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
     "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins","💹 Stock Data"
