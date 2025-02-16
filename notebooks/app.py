@@ -136,7 +136,6 @@ with tab_home:
 
         🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
     """)
-
 # 📊 **Tabs für verschiedene Krypto-Kategorien**
 def crypto_analysis_tab(tab, category, crypto_list):
     with tab:
@@ -261,7 +260,9 @@ def crypto_analysis_tab(tab, category, crypto_list):
         else:
             st.warning("⚠️ No high-confidence sentiment price data available.")
 
-
+# 🏆 **Top Coins**
+top_coins = ["Ethereum", "Wrapped Ethereum", "Solana", "Avalanche", "Polkadot", "Near Protocol", "Polygon", "XRP", "Cardano", "Cronos", "Chiliz", "Ronin", "Band Protocol", "Optimism", "Celestia", "Aethir", "Sui", "Hyperliquid", "Robinhood Coin", "Trump Coin", "USD Coin", "Binance Coin", "Litecoin", "Dogecoin", "Tron", "Aave", "Hedera", "Cosmos", "Gala", "Chainlink"]
+crypto_analysis_tab(tab_top, "Top Coins", top_coins)
 
 
  # 🏆 **Top Coins**
