@@ -13,7 +13,7 @@ st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
 st.cache_data.clear()
 
 # 📌 Google Drive File IDs für die Datensätze
-MERGED_CRYPTO_CSV_ID = "11Q7obrTvT6KVoA8PPnwWYk7BscOtCweA"
+MERGED_CRYPTO_CSV_ID = "11iGipDa3LUY9cMivOBVRrRbj0Nh6nbqT"
 CRYPTO_PRICES_CSV_ID = "10wkptEC82rQDttx2zMFrl7r4sYgkx421"
 
 # 📌 Lokale Dateinamen
