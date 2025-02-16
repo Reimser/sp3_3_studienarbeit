@@ -168,7 +168,7 @@ def crypto_analysis_tab(tab, category, crypto_list):
         st.subheader("🔥 Top 10 Most Mentioned Cryptocurrencies")
 
         if "detected_crypto" in df_filtered.columns:
-            crypto_counts = df_filtered["detected_crypto"].explode().value_counts().head(10)
+            crypto_counts = df_filtered["crypto"].explode().value_counts().head(10)
             st.bar_chart(crypto_counts)
         else:
             st.warning("⚠️ `detected_crypto` column not found. Skipping this section.")
