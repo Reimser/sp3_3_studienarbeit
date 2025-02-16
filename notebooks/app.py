@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
 import ast
-import requests
 
 # 📌 Streamlit Page Configuration
 st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
@@ -24,23 +23,27 @@ CRYPTO_PRICES_CSV_ID = "10wkptEC82rQDttx2zMFrl7r4sYgkx421"
 MERGED_CRYPTO_CSV = "reddit_merged.csv"
 CRYPTO_PRICES_CSV = "crypto_prices.csv"
 
-# 🔹 Funktion zum Herunterladen von CSV-Dateien
-@st.cache_data
-
-def download_csv_alternative(file_id, output):
+# 🔹 Sicherstellen, dass die aktuelle CSV geladen wird
+def download_csv(file_id, output):
+    """Lädt eine CSV-Datei von Google Drive herunter"""
     url = f"https://drive.google.com/uc?id={file_id}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        with open(output, "wb") as f:
-            f.write(response.content)
-        print(f"✅ {output} erfolgreich heruntergeladen!")
-    else:
-        print(f"❌ Fehler beim Herunterladen: {response.status_code}")
+    try:
+        gdown.download(url, output, quiet=False)
+        if not os.path.exists(output) or os.path.getsize(output) == 0:
+            st.error(f"❌ Fehler: {output} wurde nicht korrekt heruntergeladen!")
+    except Exception as e:
+        st.error(f"❌ Download fehlgeschlagen: {str(e)}")
 
-# Testweise ersetzen
-download_csv_alternative(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
-download_csv_alternative(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
+# 📥 **Dateien von Google Drive herunterladen**
+if os.path.exists(MERGED_CRYPTO_CSV):
+    os.remove(MERGED_CRYPTO_CSV)
+print(f"📥 Downloading {MERGED_CRYPTO_CSV} from Google Drive...")
+download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
+
+if os.path.exists(CRYPTO_PRICES_CSV):
+    os.remove(CRYPTO_PRICES_CSV)
+print(f"📥 Downloading {CRYPTO_PRICES_CSV} from Google Drive...")
+download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
 
 # 🔍 **Funktion zum Laden der CSV-Dateien mit Debugging**
 def load_csv(filepath):
@@ -50,7 +53,7 @@ def load_csv(filepath):
         return pd.DataFrame()
 
     df = pd.read_csv(filepath, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
-    
+
     # 🔹 Debugging-Informationen
     print(f"\n📌 Datei geladen: {filepath}")
     print(f"🔹 Spalten: {df.columns.tolist()}")
@@ -108,6 +111,7 @@ df_prices["date"] = pd.to_datetime(df_prices["date"], errors="coerce")
 print(f"📌 Überprüfte Spalten:")
 print(df_crypto.dtypes)
 print(df_crypto.head())
+
 
 
 
