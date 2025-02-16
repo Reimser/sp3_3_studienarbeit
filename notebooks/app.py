@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
 import ast
+import requests
 
 # 📌 Streamlit Page Configuration
 st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
@@ -25,21 +26,21 @@ CRYPTO_PRICES_CSV = "crypto_prices.csv"
 
 # 🔹 Funktion zum Herunterladen von CSV-Dateien
 @st.cache_data
-def download_csv(file_id, output):
-    """Lädt eine CSV-Datei von Google Drive herunter"""
+
+def download_csv_alternative(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
-    gdown.download(url, output, quiet=False)
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        with open(output, "wb") as f:
+            f.write(response.content)
+        print(f"✅ {output} erfolgreich heruntergeladen!")
+    else:
+        print(f"❌ Fehler beim Herunterladen: {response.status_code}")
 
-# 🔹 Sicherstellen, dass die aktuelle CSV geladen wird (alte Dateien entfernen)
-for file in [MERGED_CRYPTO_CSV, CRYPTO_PRICES_CSV]:
-    if os.path.exists(file):
-        os.remove(file)
-
-print(f"📥 Downloading {MERGED_CRYPTO_CSV} from Google Drive...")
-download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
-
-print(f"📥 Downloading {CRYPTO_PRICES_CSV} from Google Drive...")
-download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
+# Testweise ersetzen
+download_csv_alternative(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
+download_csv_alternative(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
 
 # 🔍 **Funktion zum Laden der CSV-Dateien mit Debugging**
 def load_csv(filepath):
