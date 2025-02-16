@@ -136,6 +136,15 @@ with tab_home:
 
         🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
     """)
+# 📌 Streamlit Page Configuration
+st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
+
+# 🔄 **Refresh-Button**
+if st.button("🔄 Refresh Data"):
+    st.cache_data.clear()  # Löscht gecachte Daten
+    st.cache_resource.clear()  # Löscht gecachte Ressourcen
+    st.experimental_rerun()  # Seite neu laden
+
 # 📊 **Tabs für verschiedene Krypto-Kategorien**
 def crypto_analysis_tab(tab, category, crypto_list):
     with tab:
@@ -144,6 +153,13 @@ def crypto_analysis_tab(tab, category, crypto_list):
         # 🔹 Debugging: Alle verfügbaren Kryptowährungen im Datensatz anzeigen
         available_cryptos = df_crypto["crypto"].dropna().unique().tolist()
         print(f"🔍 Verfügbare Kryptowährungen im Datensatz: {available_cryptos}")
+
+        # 🔹 Entferne nicht existierende Coins aus der Liste
+        crypto_list = [coin for coin in crypto_list if coin in available_cryptos]
+
+        if not crypto_list:
+            st.warning(f"⚠️ No cryptocurrencies available in this category.")
+            return
 
         selected_crypto = st.selectbox(
             f"Choose a {category} Coin:", crypto_list, key=f"{category.lower()}_crypto"
@@ -260,8 +276,10 @@ def crypto_analysis_tab(tab, category, crypto_list):
         else:
             st.warning("⚠️ No high-confidence sentiment price data available.")
 
-# 🏆 **Top Coins**
+
+# 🏆 **Top Coins (Nur verfügbare Coins)**
 top_coins = ["Ethereum", "Wrapped Ethereum", "Solana", "Avalanche", "Polkadot", "Near Protocol", "Polygon", "XRP", "Cardano", "Cronos", "Chiliz", "Ronin", "Band Protocol", "Optimism", "Celestia", "Aethir", "Sui", "Hyperliquid", "Robinhood Coin", "Trump Coin", "USD Coin", "Binance Coin", "Litecoin", "Dogecoin", "Tron", "Aave", "Hedera", "Cosmos", "Gala", "Chainlink"]
+
 crypto_analysis_tab(tab_top, "Top Coins", top_coins)
 
 
