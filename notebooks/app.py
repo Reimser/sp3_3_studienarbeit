@@ -281,7 +281,7 @@ crypto_analysis_tab(tab_meme, "Meme Coins", meme_coins)
 other_coins = ["VeChain", "Render", "Kusama", "Hedera", "Filecoin", "Vulcan Forged PYR", "Illuvium", "Numerai", "Audius", "Kusama",  "Berachain", "The Sandbox", "TestCoin", "Cosmos"]
 crypto_analysis_tab(tab_other, "Weitere Coins", other_coins)
 
-# 🔹 **💹 STOCK MARKET ANALYSIS**
+# 🔹 **STOCK MARKET ANALYSIS**
 with tab_stocks:
     st.title("💹 Stock Market Analysis (Coming Soon)")
     st.warning("🚧 This section is under development. Stock data will be integrated soon!")
