@@ -2,15 +2,18 @@ import streamlit as st
 import pandas as pd
 import gdown
 import os
-import ast
+import numpy as np
 import matplotlib.pyplot as plt
+import ast
 import seaborn as sns
 
 # 📌 Streamlit Page Configuration
 st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
 
-# 🚀 **Cache zurücksetzen**
+# 🚀 **Cache wirklich zurücksetzen**
 st.cache_data.clear()
+st.cache_resource.clear()
+st.experimental_rerun()
 
 # 📌 Google Drive File IDs für die Datensätze
 MERGED_CRYPTO_CSV_ID = "11iGipDa3LUY9cMivOBVRrRbj0Nh6nbqT"
@@ -27,14 +30,18 @@ def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
-# 🔹 Sicherstellen, dass die Dateien existieren
-if not os.path.exists(MERGED_CRYPTO_CSV):
-    print(f"📥 Downloading {MERGED_CRYPTO_CSV} from Google Drive...")
-    download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
+# 🔹 Sicherstellen, dass die aktuelle CSV geladen wird
+if os.path.exists(MERGED_CRYPTO_CSV):
+    os.remove(MERGED_CRYPTO_CSV)
 
-if not os.path.exists(CRYPTO_PRICES_CSV):
-    print(f"📥 Downloading {CRYPTO_PRICES_CSV} from Google Drive...")
-    download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
+print(f"📥 Downloading {MERGED_CRYPTO_CSV} from Google Drive...")
+download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
+
+if os.path.exists(CRYPTO_PRICES_CSV):
+    os.remove(CRYPTO_PRICES_CSV)
+
+print(f"📥 Downloading {CRYPTO_PRICES_CSV} from Google Drive...")
+download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
 
 # 🔍 **Funktion zum Laden der CSV-Dateien mit Debugging**
 @st.cache_data
@@ -44,7 +51,7 @@ def load_csv(filepath):
         st.error(f"❌ Datei nicht gefunden: {filepath}")
         return pd.DataFrame()
 
-    df = pd.read_csv(filepath, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
+    df = pd.read_csv(filepath, encoding="utf-8-sig", on_bad_lines="skip")
 
     # 🔹 Debugging: Spalten und erste Werte anzeigen
     print(f"\n📌 Datei: {filepath}")
@@ -55,21 +62,16 @@ def load_csv(filepath):
     return df
 
 # 📌 **Daten laden**
-df_crypto = load_csv(MERGED_CRYPTO_CSV)
-df_prices = load_csv(CRYPTO_PRICES_CSV)
+df_crypto = load_csv(MERGED_CRYPTO_CSV).copy()
+df_prices = load_csv(CRYPTO_PRICES_CSV).copy()
 
-# 🔹 **Daten korrigieren**
+# 🔹 **Daten bereinigen & anpassen**
 def clean_crypto_data(df):
     """Reinigt die Reddit-Krypto-Daten und setzt den Goldstandard."""
     df = df.copy()
 
     # ✅ `date` in `datetime64` umwandeln
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
-
-    # ✅ `detected_crypto` in echte Listen konvertieren (Falls noch Strings vorhanden sind)
-    df["detected_crypto"] = df["detected_crypto"].apply(
-        lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else []
-    )
 
     # ✅ `comment_id` NaN durch None ersetzen
     df["comment_id"] = df["comment_id"].astype("object").where(df["comment_id"].notna(), None)
@@ -113,6 +115,7 @@ with tab_home:
         🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
     """)
 
+# 📊 **Tabs für verschiedene Krypto-Kategorien**
 def crypto_analysis_tab(tab, category, crypto_list):
     with tab:
         st.title(f"{category} Sentiment & Mentions")
@@ -121,8 +124,8 @@ def crypto_analysis_tab(tab, category, crypto_list):
             f"Choose a {category} Coin:", crypto_list, key=f"{category.lower()}_crypto"
         )
 
-        # 🔹 Korrekte Filterung
-        df_filtered = df_crypto[df_crypto["detected_crypto"].apply(lambda x: selected_crypto in x)]
+        # 🔹 Korrekte Filterung basierend auf dem neuen Datensatz
+        df_filtered = df_crypto[df_crypto["crypto"].astype(str) == selected_crypto]
 
         # 🔍 Debugging: Zeige die ersten Zeilen nach der Filterung
         st.write(f"📊 {category} - Verfügbare Daten für {selected_crypto}:")
@@ -131,6 +134,7 @@ def crypto_analysis_tab(tab, category, crypto_list):
         if df_filtered.empty:
             st.warning(f"⚠️ No data available for {selected_crypto}.")
             st.stop()
+
 
         # 🔹 **1️⃣ Most Discussed Cryptos**
         st.subheader("🔥 Top 10 Most Mentioned Cryptocurrencies")
