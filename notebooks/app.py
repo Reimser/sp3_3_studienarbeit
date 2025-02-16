@@ -24,6 +24,7 @@ df_crypto["crypto"] = df_crypto["crypto"].astype(str).str.strip()
 # 🔍 **Debugging: Verfügbare Kryptowährungen**
 available_cryptos = df_crypto["crypto"].dropna().unique().tolist()
 print(f"🔍 Verfügbare Kryptowährungen im Datensatz: {available_cryptos}")
+st.write("🔍 **Alle verfügbaren Kryptowährungen im Datensatz:**", df_crypto["crypto"].unique().tolist())
 
 # 📊 **Multi-Tab Navigation mit Kategorien**
 tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
