@@ -159,19 +159,18 @@ def crypto_analysis_tab(tab, category, crypto_list):
 
         if df_filtered.empty:
             st.warning(f"⚠️ No data available for {selected_crypto}.")
-            st.stop()
+            return  # `st.stop()` entfernt, um den Code weiterlaufen zu lassen
 
         # 🔹 Anzeige der gefilterten Daten
         st.write(df_filtered)
 
         # 🔹 **1️⃣ Most Discussed Cryptos**
         st.subheader("🔥 Top 10 Most Mentioned Cryptocurrencies")
-
-        if "detected_crypto" in df_filtered.columns:
-            crypto_counts = df_filtered["crypto"].explode().value_counts().head(10)
+        if "crypto" in df_filtered.columns:
+            crypto_counts = df_filtered["crypto"].value_counts().head(10)
             st.bar_chart(crypto_counts)
         else:
-            st.warning("⚠️ `detected_crypto` column not found. Skipping this section.")
+            st.warning("⚠️ `crypto` column not found. Skipping this section.")
 
         # 🔹 **2️⃣ Sentiment Distribution per Crypto**
         st.subheader("💡 Sentiment Distribution of Cryptos")
@@ -183,8 +182,11 @@ def crypto_analysis_tab(tab, category, crypto_list):
 
         # 🔹 **3️⃣ Word Count Over Time**
         st.subheader("📝 Word Count Evolution Over Time")
-        wordcount_per_day = df_filtered.groupby("date").size()
-        st.line_chart(wordcount_per_day)
+        if "date" in df_filtered.columns:
+            wordcount_per_day = df_filtered.groupby("date").size()
+            st.line_chart(wordcount_per_day)
+        else:
+            st.warning("⚠️ `date` column not found. Skipping word count evolution.")
 
         # 🔹 **4️⃣ Sentiment Trend Over Time**
         st.subheader("📅 Sentiment Trend Over Time")
@@ -215,6 +217,8 @@ def crypto_analysis_tab(tab, category, crypto_list):
             fig.suptitle(f"Word Count & Price for {selected_crypto} Over Time")
             fig.tight_layout()
             st.pyplot(fig)
+        else:
+            st.warning("⚠️ No price data available for this crypto.")
 
         # 🔹 **6️⃣ Sentiment Confidence Boxplot**
         st.subheader("📊 Sentiment Confidence per Cryptocurrency")
@@ -254,6 +258,9 @@ def crypto_analysis_tab(tab, category, crypto_list):
             fig.suptitle(f"High-Confidence Sentiment & Price for {selected_crypto} Over Time")
             fig.tight_layout()
             st.pyplot(fig)
+        else:
+            st.warning("⚠️ No high-confidence sentiment price data available.")
+
 
 
 
