@@ -116,9 +116,9 @@ print(df_crypto.head())
 print("🔍 Verfügbare Kryptowährungen im Datensatz:", df_crypto["crypto"].unique())
 
 
-# 📊 **Multi-Tab Navigation mit Kategorien**
+## 📊 **Multi-Tab Navigation mit Kategorien**
 tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
-    "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins","💹 Stock Data"
+    "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins", "💹 Stock Data"
 ])
 
 # 🔹 **🏠 HOME (README)**
@@ -136,25 +136,13 @@ with tab_home:
 
         🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
     """)
-# 📌 Streamlit Page Configuration
-st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
-
-# 🔄 **Refresh-Button**
-if st.button("🔄 Refresh Data"):
-    st.cache_data.clear()  # Löscht gecachte Daten
-    st.cache_resource.clear()  # Löscht gecachte Ressourcen
-    st.experimental_rerun()  # Seite neu laden
 
 # 📊 **Tabs für verschiedene Krypto-Kategorien**
 def crypto_analysis_tab(tab, category, crypto_list):
     with tab:
         st.title(f"{category} Sentiment & Mentions")
 
-        # 🔹 Debugging: Alle verfügbaren Kryptowährungen im Datensatz anzeigen
-        available_cryptos = df_crypto["crypto"].dropna().unique().tolist()
-        print(f"🔍 Verfügbare Kryptowährungen im Datensatz: {available_cryptos}")
-
-        # 🔹 Entferne nicht existierende Coins aus der Liste
+        # ✅ **Nur existierende Coins anzeigen**
         crypto_list = [coin for coin in crypto_list if coin in available_cryptos]
 
         if not crypto_list:
@@ -165,45 +153,34 @@ def crypto_analysis_tab(tab, category, crypto_list):
             f"Choose a {category} Coin:", crypto_list, key=f"{category.lower()}_crypto"
         )
 
-        # 🔹 **Korrekte Filterung basierend auf dem neuen Datensatz**
+        # ✅ **Daten filtern**
         df_filtered = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto.lower()]
 
-        # 🔍 Debugging: Zeige die ersten Zeilen nach der Filterung
+        # 🔍 **Debugging: Überprüfen, ob gefilterte Daten existieren**
         print(f"📊 {category} - Verfügbare Daten für {selected_crypto}:")
         print(df_filtered.head())
 
         if df_filtered.empty:
             st.warning(f"⚠️ No data available for {selected_crypto}.")
-            return  # `st.stop()` entfernt, um den Code weiterlaufen zu lassen
+            return
 
-        # 🔹 Anzeige der gefilterten Daten
-        st.write(df_filtered)
-
-        # 🔹 **1️⃣ Most Discussed Cryptos**
-        st.subheader("🔥 Top 10 Most Mentioned Cryptocurrencies")
-        if "crypto" in df_filtered.columns:
-            crypto_counts = df_filtered["crypto"].value_counts().head(10)
-            st.bar_chart(crypto_counts)
-        else:
-            st.warning("⚠️ `crypto` column not found. Skipping this section.")
-
-        # 🔹 **2️⃣ Sentiment Distribution per Crypto**
+        # ✅ **1️⃣ Sentiment Distribution**
         st.subheader("💡 Sentiment Distribution of Cryptos")
         if "sentiment" in df_filtered.columns:
             sentiment_distribution = df_filtered["sentiment"].value_counts()
             st.bar_chart(sentiment_distribution)
         else:
-            st.warning("⚠️ `sentiment` column not found. Skipping this section.")
+            st.warning("⚠️ `sentiment` column not found. Skipping sentiment distribution.")
 
-        # 🔹 **3️⃣ Word Count Over Time**
+        # ✅ **2️⃣ Word Count Over Time**
         st.subheader("📝 Word Count Evolution Over Time")
         if "date" in df_filtered.columns:
             wordcount_per_day = df_filtered.groupby("date").size()
             st.line_chart(wordcount_per_day)
         else:
-            st.warning("⚠️ `date` column not found. Skipping word count evolution.")
+            st.warning("⚠️ `date` column not found. Skipping word count.")
 
-        # 🔹 **4️⃣ Sentiment Trend Over Time**
+        # ✅ **3️⃣ Sentiment Trend Over Time**
         st.subheader("📅 Sentiment Trend Over Time")
         if "sentiment" in df_filtered.columns:
             sentiment_trend = df_filtered.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
@@ -211,31 +188,7 @@ def crypto_analysis_tab(tab, category, crypto_list):
         else:
             st.warning("⚠️ `sentiment` column not found. Skipping sentiment trends.")
 
-        # 🔹 **5️⃣ Word Count & Price Over Time**
-        st.subheader("📊 Word Count & Price Over Time")
-        if selected_crypto in df_prices["crypto"].values:
-            df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto]
-            df_combined_dual = df_filtered.groupby("date").size().reset_index(name="word_count")
-            df_combined_dual = df_combined_dual.merge(df_price_filtered, on="date", how="inner")
-
-            fig, ax1 = plt.subplots(figsize=(10, 5))
-            ax1.set_xlabel("Date")
-            ax1.set_ylabel("Word Count", color="blue")
-            ax1.plot(df_combined_dual["date"], df_combined_dual["word_count"], color="blue", label="Word Count")
-            ax1.tick_params(axis="y", labelcolor="blue")
-
-            ax2 = ax1.twinx()
-            ax2.set_ylabel("Price (USD)", color="red")
-            ax2.plot(df_combined_dual["date"], df_combined_dual["price"], color="red", label="Price")
-            ax2.tick_params(axis="y", labelcolor="red")
-
-            fig.suptitle(f"Word Count & Price for {selected_crypto} Over Time")
-            fig.tight_layout()
-            st.pyplot(fig)
-        else:
-            st.warning("⚠️ No price data available for this crypto.")
-
-        # 🔹 **6️⃣ Sentiment Confidence Boxplot**
+        # ✅ **4️⃣ Sentiment Confidence Boxplot**
         st.subheader("📊 Sentiment Confidence per Cryptocurrency")
         if "sentiment_confidence" in df_filtered.columns:
             fig, ax = plt.subplots(figsize=(10, 5))
@@ -245,16 +198,17 @@ def crypto_analysis_tab(tab, category, crypto_list):
         else:
             st.warning("⚠️ `sentiment_confidence` column not found. Skipping boxplot.")
 
-        # 🔹 **7️⃣ Sentiment Distribution per Crypto (High Confidence)**
+        # ✅ **5️⃣ High-Confidence Sentiment**
         st.subheader("🎯 Sentiment Distribution (High Confidence)")
         CONFIDENCE_THRESHOLD = 0.8
         df_high_conf = df_filtered[df_filtered["sentiment_confidence"] >= CONFIDENCE_THRESHOLD]
         sentiment_dist_high_conf = df_high_conf.groupby(["sentiment"]).size()
         st.bar_chart(sentiment_dist_high_conf)
 
-        # 🔹 **8️⃣ High-Confidence Sentiment & Price Over Time**
+        # ✅ **6️⃣ High-Confidence Sentiment & Price Over Time**
         st.subheader("📊 High-Confidence Sentiment & Price Over Time")
         if selected_crypto in df_prices["crypto"].values:
+            df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto]
             df_high_conf_trend = df_high_conf.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
             df_combined_sentiment_price = df_high_conf_trend.merge(df_price_filtered, on="date", how="inner")
 
@@ -274,26 +228,22 @@ def crypto_analysis_tab(tab, category, crypto_list):
             fig.tight_layout()
             st.pyplot(fig)
         else:
-            st.warning("⚠️ No high-confidence sentiment price data available.")
+            st.warning("⚠️ No price data available for this crypto.")
 
-
- # 🏆 **Top Coins**
-top_coins = ["Ethereum", "Wrapped Ethereum", "Solana", "Avalanche", "Polkadot", "Near Protocol", "Polygon", "XRP", "Cardano", "Cronos",  "Chiliz",  "Ronin", "Band Protocol", "Optimism", "Celestia",  "Aethir", "Sui", "Hyperliquid", "Robinhood Coin", "Trump Coin", "USD Coin", "Binance Coin", "Litecoin", "Dogecoin", "Tron", "Aave", "Hedera",  "Cosmos", "Gala", "Chainlink"]
+# 📊 **Tabs initialisieren**
+top_coins = ["Ethereum", "Wrapped Ethereum", "Solana", "Avalanche", "Polkadot", "Near Protocol", "Polygon", "XRP", "Cardano", "Cronos"]
 crypto_analysis_tab(tab_top, "Top Coins", top_coins)
 
-# 📈 **New Coins**
-new_coins = ["Arbitrum", "Starknet", "Injective Protocol", "Sei Network", "Aptos", "EigenLayer", "Mantle", "Immutable X", "Ondo Finance", "Worldcoin", "Aerodrome", "Jupiter", "THORChain", "Pendle", "Kujira", "Noble", "Stride", "Dymension", "Seamless Protocol", "Blast", "Merlin", "Tapioca", "Arcadia Finance", "Notcoin", "Omni Network", "LayerZero", "ZetaChain", "Friend.tech"]
+new_coins = ["Arbitrum", "Starknet", "Injective Protocol", "Sei Network", "Aptos"]
 crypto_analysis_tab(tab_new, "New Coins", new_coins)
 
-# 😂 **Meme Coins**
-meme_coins = ["Shiba Inu", "Pepe", "Floki Inu", "Bonk", "Wojak", "Mog Coin", "Doge Killer (Leash)", "Baby Doge Coin", "Degen", "Toshi", "Fartcoin", "Banana", "Kabosu", "Husky", "Samoyedcoin", "Milkbag"]
+meme_coins = ["Shiba Inu", "Pepe", "Floki Inu", "Bonk", "Degen", "Toshi"]
 crypto_analysis_tab(tab_meme, "Meme Coins", meme_coins)
 
-# ⚡ **Weitere Coins**
-other_coins = ["VeChain", "Render", "Kusama", "Hedera", "Filecoin", "Vulcan Forged PYR", "Illuvium", "Numerai", "Audius", "Kusama",  "Berachain", "The Sandbox", "TestCoin", "Cosmos"]
+other_coins = ["VeChain", "Render", "Hedera", "Filecoin", "Cosmos"]
 crypto_analysis_tab(tab_other, "Weitere Coins", other_coins)
 
-# 🔹 **STOCK MARKET ANALYSIS**
+# 🔹 **💹 STOCK MARKET ANALYSIS**
 with tab_stocks:
     st.title("💹 Stock Market Analysis (Coming Soon)")
     st.warning("🚧 This section is under development. Stock data will be integrated soon!")
