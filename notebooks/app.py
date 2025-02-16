@@ -4,8 +4,9 @@ import gdown
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import ast
 import seaborn as sns
+import matplotlib.dates as mdates
+import ast
 
 # 📌 Streamlit Page Configuration
 st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
@@ -13,11 +14,6 @@ st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
 # 🚀 **Cache wirklich zurücksetzen**
 st.cache_data.clear()
 st.cache_resource.clear()
-if "rerun_trigger" not in st.session_state:
-    st.session_state.rerun_trigger = False
-
-if st.session_state.rerun_trigger:
-    st.session_state.rerun_trigger = False
 
 # 📌 Google Drive File IDs für die Datensätze
 MERGED_CRYPTO_CSV_ID = "11iGipDa3LUY9cMivOBVRrRbj0Nh6nbqT"
@@ -34,51 +30,54 @@ def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
-# 🔹 Sicherstellen, dass die aktuelle CSV geladen wird
-if os.path.exists(MERGED_CRYPTO_CSV):
-    os.remove(MERGED_CRYPTO_CSV)
+# 🔹 Sicherstellen, dass die aktuelle CSV geladen wird (alte Dateien entfernen)
+for file in [MERGED_CRYPTO_CSV, CRYPTO_PRICES_CSV]:
+    if os.path.exists(file):
+        os.remove(file)
 
 print(f"📥 Downloading {MERGED_CRYPTO_CSV} from Google Drive...")
 download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
-
-if os.path.exists(CRYPTO_PRICES_CSV):
-    os.remove(CRYPTO_PRICES_CSV)
 
 print(f"📥 Downloading {CRYPTO_PRICES_CSV} from Google Drive...")
 download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
 
 # 🔍 **Funktion zum Laden der CSV-Dateien mit Debugging**
-@st.cache_data
 def load_csv(filepath):
-    """Lädt eine CSV-Datei und zeigt Debugging-Informationen an"""
+    """Lädt eine CSV-Datei mit `|` als Trennzeichen"""
     if not os.path.exists(filepath):
         st.error(f"❌ Datei nicht gefunden: {filepath}")
         return pd.DataFrame()
 
-    df = pd.read_csv(filepath, encoding="utf-8-sig", on_bad_lines="skip")
-
-    # 🔹 Debugging: Spalten und erste Werte anzeigen
-    print(f"\n📌 Datei: {filepath}")
+    df = pd.read_csv(filepath, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
+    
+    # 🔹 Debugging-Informationen
+    print(f"\n📌 Datei geladen: {filepath}")
     print(f"🔹 Spalten: {df.columns.tolist()}")
-    print(df.dtypes)  # Datentypen prüfen
-    print(df.head())   # Erste Zeilen anzeigen
+    print(df.dtypes)
+    print(df.head())
 
     return df
 
 # 📌 **Daten laden**
-df_crypto = load_csv(MERGED_CRYPTO_CSV).copy()
-df_prices = load_csv(CRYPTO_PRICES_CSV).copy()
+df_crypto = load_csv(MERGED_CRYPTO_CSV)
+df_prices = load_csv(CRYPTO_PRICES_CSV)
 
 # 🔹 **Daten bereinigen & anpassen**
 def clean_crypto_data(df):
-    """Reinigt die Reddit-Krypto-Daten und setzt den Goldstandard."""
+    """Reinigt die Reddit-Krypto-Daten und korrigiert Datentypen."""
     df = df.copy()
 
     # ✅ `date` in `datetime64` umwandeln
-    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    if "date" in df.columns:
+        df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d", errors="coerce")
+
+    # ✅ `time` als Zeitformat speichern
+    if "time" in df.columns:
+        df["time"] = pd.to_datetime(df["time"], format="%H:%M:%S", errors="coerce").dt.time
 
     # ✅ `comment_id` NaN durch None ersetzen
-    df["comment_id"] = df["comment_id"].astype("object").where(df["comment_id"].notna(), None)
+    if "comment_id" in df.columns:
+        df["comment_id"] = df["comment_id"].astype("object").where(df["comment_id"].notna(), None)
 
     return df
 
@@ -87,10 +86,12 @@ def clean_price_data(df):
     df = df.copy()
 
     # ✅ `date` in `datetime64` umwandeln
-    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    if "date" in df.columns:
+        df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
     # ✅ `price` in `float64` umwandeln
-    df["price"] = pd.to_numeric(df["price"], errors="coerce")
+    if "price" in df.columns:
+        df["price"] = pd.to_numeric(df["price"], errors="coerce")
 
     return df
 
@@ -98,11 +99,15 @@ def clean_price_data(df):
 df_crypto = clean_crypto_data(df_crypto)
 df_prices = clean_price_data(df_prices)
 
-# Debugging: Zeige alle Spaltennamen und Datentypen
-print("📌 Spalten in df_crypto:", df_crypto.columns.tolist())
-print("🔍 Datentypen in df_crypto:")
+# ✅ Sicherstellen, dass `date` wirklich `datetime64[ns]` ist
+df_crypto["date"] = pd.to_datetime(df_crypto["date"], format="%Y-%m-%d", errors="coerce")
+df_prices["date"] = pd.to_datetime(df_prices["date"], errors="coerce")
+
+# 🔍 Debugging-Check
+print(f"📌 Überprüfte Spalten:")
 print(df_crypto.dtypes)
-print(df_crypto.head())  # Erste Zeilen zur Überprüfung
+print(df_crypto.head())
+
 
 
 # 📊 **Multi-Tab Navigation mit Kategorien**
