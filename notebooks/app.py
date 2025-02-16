@@ -113,6 +113,7 @@ print(df_crypto.dtypes)
 print(df_crypto.head())
 
 
+print("🔍 Verfügbare Kryptowährungen im Datensatz:", df_crypto["crypto"].unique())
 
 
 # 📊 **Multi-Tab Navigation mit Kategorien**
@@ -257,7 +258,7 @@ def crypto_analysis_tab(tab, category, crypto_list):
 
 
  # 🏆 **Top Coins**
-top_coins = ["Bitcoin", "Ethereum", "Wrapped Ethereum", "Solana", "Avalanche", "Polkadot", "Near Protocol", "Polygon", "XRP", "Cardano", "Cronos",  "Chiliz",  "Ronin", "Band Protocol", "Optimism", "Celestia",  "Aethir", "Sui", "Hyperliquid", "Robinhood Coin", "Trump Coin", "USD Coin", "Binance Coin", "Litecoin", "Dogecoin", "Tron", "Aave", "Hedera",  "Cosmos", "Gala", "Chainlink"]
+top_coins = ["Ethereum", "Wrapped Ethereum", "Solana", "Avalanche", "Polkadot", "Near Protocol", "Polygon", "XRP", "Cardano", "Cronos",  "Chiliz",  "Ronin", "Band Protocol", "Optimism", "Celestia",  "Aethir", "Sui", "Hyperliquid", "Robinhood Coin", "Trump Coin", "USD Coin", "Binance Coin", "Litecoin", "Dogecoin", "Tron", "Aave", "Hedera",  "Cosmos", "Gala", "Chainlink"]
 crypto_analysis_tab(tab_top, "Top Coins", top_coins)
 
 # 📈 **New Coins**
