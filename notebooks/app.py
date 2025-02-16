@@ -12,8 +12,10 @@ import ast
 st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
 
 # 🚀 **Cache wirklich zurücksetzen**
-st.cache_data.clear()
-st.cache_resource.clear()
+if st.button("🔄 Refresh Data"):
+    st.cache_data.clear()  # Löscht gecachte Daten
+    st.cache_resource.clear()  # Löscht gecachte Ressourcen
+    st.experimental_rerun()  # Seite neu laden
 
 # 📌 Google Drive File IDs für die Datensätze
 MERGED_CRYPTO_CSV_ID = "11iGipDa3LUY9cMivOBVRrRbj0Nh6nbqT"
@@ -112,10 +114,6 @@ print(f"📌 Überprüfte Spalten:")
 print(df_crypto.dtypes)
 print(df_crypto.head())
 
-
-print("🔍 Verfügbare Kryptowährungen im Datensatz:", df_crypto["crypto"].unique())
-
-
 # 📊 **Multi-Tab Navigation mit Kategorien**
 tab_home, tab_top, tab_new, tab_meme, tab_other, tab_stocks = st.tabs([
     "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins","💹 Stock Data"
@@ -127,40 +125,23 @@ with tab_home:
     st.markdown("""
         ## 🔍 Project Overview
         This dashboard provides a **data-driven analysis of cryptocurrency sentiment** using **Reddit discussions** and **historical price data**.
-
-        ### 🔎 **Key Features**
-        - **📈 Crypto Sentiment Analysis:**  
-          - Top mentioned cryptocurrencies & sentiment distribution  
-          - Sentiment trends over time (overall & high-confidence)  
-          - Combined analysis of sentiment & price dynamics    
-
-        🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
     """)
+
 # 📊 **Tabs für verschiedene Krypto-Kategorien**
 def crypto_analysis_tab(tab, category, crypto_list):
     with tab:
         st.title(f"{category} Sentiment & Mentions")
 
-        # 🔹 Debugging: Alle verfügbaren Kryptowährungen im Datensatz anzeigen
         available_cryptos = df_crypto["crypto"].dropna().unique().tolist()
-        print(f"🔍 Verfügbare Kryptowährungen im Datensatz: {available_cryptos}")
-
         selected_crypto = st.selectbox(
-            f"Choose a {category} Coin:", crypto_list, key=f"{category.lower()}_crypto"
+            f"Choose a {category} Coin:", [c for c in crypto_list if c in available_cryptos]
         )
 
-        # 🔹 **Korrekte Filterung basierend auf dem neuen Datensatz**
         df_filtered = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto.lower()]
-
-        # 🔍 Debugging: Zeige die ersten Zeilen nach der Filterung
-        print(f"📊 {category} - Verfügbare Daten für {selected_crypto}:")
-        print(df_filtered.head())
-
         if df_filtered.empty:
             st.warning(f"⚠️ No data available for {selected_crypto}.")
-            return  # `st.stop()` entfernt, um den Code weiterlaufen zu lassen
+            return
 
-        # 🔹 Anzeige der gefilterten Daten
         st.write(df_filtered)
 
         # 🔹 **1️⃣ Most Discussed Cryptos**
