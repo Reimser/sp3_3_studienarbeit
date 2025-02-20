@@ -103,10 +103,6 @@ def clean_price_data(df):
 df_crypto = clean_crypto_data(df_crypto)
 df_prices = clean_price_data(df_prices)
 
-# ✅ Sicherstellen, dass `date` wirklich `datetime64[ns]` ist
-df_crypto["date"] = pd.to_datetime(df_crypto["date"], format="%Y-%m-%d", errors="coerce")
-df_prices["date"] = pd.to_datetime(df_prices["date"], errors="coerce")
-
 # 🔍 Debugging-Check
 print(f"📌 Überprüfte Spalten:")
 print(df_crypto.dtypes)
