@@ -2,23 +2,21 @@ import streamlit as st
 import pandas as pd
 import gdown
 import os
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # 📌 Streamlit Page Configuration
-st.set_page_config(page_title="Reddit Data Analysis", layout="wide")
+st.set_page_config(page_title="Reddit Crypto Sentiment Dashboard", layout="wide")
 
-# 🚀 **Cache zurücksetzen**
-st.cache_data.clear()
-st.cache_resource.clear()
-
-# 📌 Google Drive File IDs
+# 📥 **Google Drive File IDs**
 MERGED_CRYPTO_CSV_ID = "127YXOmbF5V6KEPu8tzzrSRY3T8Pe68an"
 CRYPTO_PRICES_CSV_ID = "11k9wiflOkqg2DayEgn7iPqNPHC5Qatht"
 
-# 📌 Lokale Dateinamen
+# 📌 **Lokale Dateinamen**
 MERGED_CRYPTO_CSV = "reddit_merged.csv"
 CRYPTO_PRICES_CSV = "crypto_prices.csv"
 
-# 🔹 **Download CSV-Dateien**
+# 🔥 **Daten herunterladen**
 def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     try:
@@ -28,71 +26,75 @@ def download_csv(file_id, output):
     except Exception as e:
         st.error(f"❌ Download fehlgeschlagen: {str(e)}")
 
-# 🔥 **Daten laden**
-st.sidebar.write("📥 **Daten werden geladen...**")
-
-# Datei-Download
+# 📥 **Daten laden**
 download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
 download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
 
-# **Lade CSV-Dateien**
+# 📌 **CSV-Dateien einlesen**
+@st.cache_data
 def load_csv(filepath):
-    """Lädt eine CSV-Datei mit `|` als Trennzeichen"""
     if not os.path.exists(filepath):
         st.error(f"❌ Datei nicht gefunden: {filepath}")
         return pd.DataFrame()
-    
-    df = pd.read_csv(filepath, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
-    return df
+    return pd.read_csv(filepath, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
 
-# 📌 Daten einlesen
 df_crypto = load_csv(MERGED_CRYPTO_CSV)
 df_prices = load_csv(CRYPTO_PRICES_CSV)
 
-# 🔍 **Daten-Übersicht**
-st.title("📊 Reddit Krypto-Datenanalyse")
-st.subheader("📌 Datenübersicht")
+# 📊 **Multi-Tab Navigation mit Kategorien**
+tab_home, tab_top, tab_new, tab_meme, tab_other = st.tabs([
+    "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins"
+])
 
-col1, col2 = st.columns(2)
+# 🔹 **🏠 HOME (README)**
+with tab_home:
+    st.title("📊 Reddit Crypto Sentiment Dashboard")
+    st.markdown("""
+        ## 🔍 Project Overview
+        This dashboard provides a **data-driven analysis of cryptocurrency sentiment** using **Reddit discussions** and **historical price data**.
 
-with col1:
-    st.write("### 🔹 reddit_merged.csv")
-    st.write(f"✅ **{df_crypto.shape[0]:,}** Einträge | **{df_crypto.shape[1]}** Spalten")
-    st.write(df_crypto.head())
+        ### 🔎 **Key Features**
+        - **📈 Crypto Sentiment Analysis:**  
+          - Top mentioned cryptocurrencies & sentiment distribution  
+          - Sentiment trends over time (overall & high-confidence)  
+          - Combined analysis of sentiment & price dynamics    
 
-with col2:
-    st.write("### 🔹 crypto_prices.csv")
-    st.write(f"✅ **{df_prices.shape[0]:,}** Einträge | **{df_prices.shape[1]}** Spalten")
-    st.write(df_prices.head())
+        🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
+    """)
 
-# 🔍 **Fehlende Werte analysieren**
-st.subheader("❌ Fehlende Werte in den Daten")
+# 📊 **Funktion für die Tabs mit zwei Visualisierungen**
+def crypto_analysis_tab(tab, category, crypto_list):
+    with tab:
+        st.title(f"{category} Sentiment & Mentions")
 
-missing_crypto = df_crypto.isnull().sum()
-missing_prices = df_prices.isnull().sum()
+        # 🔹 **Nur relevante Coins anzeigen**
+        df_filtered = df_crypto[df_crypto["crypto"].isin(crypto_list)]
+        available_cryptos = df_filtered["crypto"].unique()
+        print(f"🔍 Verfügbare Kryptowährungen in {category}: {available_cryptos}")
 
-col1, col2 = st.columns(2)
-with col1:
-    st.write("🔹 **Fehlende Werte in reddit_merged.csv**")
-    st.write(missing_crypto[missing_crypto > 0])
+        if df_filtered.empty:
+            st.warning(f"⚠️ No data available for {category}.")
+            return
 
-with col2:
-    st.write("🔹 **Fehlende Werte in crypto_prices.csv**")
-    st.write(missing_prices[missing_prices > 0])
+        # 📊 **1️⃣ Erwähnungen pro Crypto**
+        st.subheader("🔥 Most Mentioned Cryptocurrencies")
+        crypto_counts = df_filtered["crypto"].value_counts()
+        st.bar_chart(crypto_counts)
 
-# 📊 **Datenverteilung**
-st.subheader("📊 Verteilung wichtiger Spalten")
+        # 📊 **2️⃣ Sentiment-Trend über die Zeit**
+        st.subheader("📅 Sentiment Trend Over Time")
+        sentiment_trend = df_filtered.groupby(["date", "crypto", "sentiment"]).size().unstack(fill_value=0)
+        st.line_chart(sentiment_trend)
 
-col1, col2 = st.columns(2)
+# 🔹 **Tab für jede Krypto-Kategorie**
+top_coins = ["Ethereum", "Wrapped Ethereum", "Solana", "Avalanche", "Polkadot", "Near Protocol", "Polygon", "XRP", "Cardano", "Cronos"]
+crypto_analysis_tab(tab_top, "Top Coins", top_coins)
 
-with col1:
-    st.write("**📌 Häufigste Kryptowährungen in reddit_merged.csv**")
-    crypto_counts = df_crypto["crypto"].value_counts().head(10)
-    st.bar_chart(crypto_counts)
+new_coins = ["Arbitrum", "Starknet", "Injective Protocol", "Sei Network", "Aptos", "EigenLayer", "Mantle", "Immutable X", "Ondo Finance"]
+crypto_analysis_tab(tab_new, "New Coins", new_coins)
 
-with col2:
-    st.write("**📌 Sentiment-Verteilung in reddit_merged.csv**")
-    sentiment_counts = df_crypto["sentiment"].value_counts()
-    st.bar_chart(sentiment_counts)
+meme_coins = ["Shiba Inu", "Pepe", "Floki Inu", "Bonk", "Degen", "Toshi", "Fartcoin", "Banana", "Husky"]
+crypto_analysis_tab(tab_meme, "Meme Coins", meme_coins)
 
-st.success("✅ **Analyse abgeschlossen!**")
+other_coins = ["VeChain", "Render", "Kusama", "Hedera", "Filecoin", "Cosmos", "Numerai", "Berachain", "The Sandbox"]
+crypto_analysis_tab(tab_other, "Weitere Coins", other_coins)
