@@ -41,6 +41,16 @@ def load_csv(filepath):
 df_crypto = load_csv(MERGED_CRYPTO_CSV)
 df_prices = load_csv(CRYPTO_PRICES_CSV)
 
+# Datentypen korrigieren
+df_crypto["date"] = pd.to_datetime(df_crypto["date"], format="%Y-%m-%d", errors="coerce")
+
+df_crypto["crypto"] = df_crypto["crypto"].astype(str)
+df_crypto["sentiment"] = df_crypto["sentiment"].astype(str)
+
+# 🔍 Debugging: Dtypes prüfen
+print(df_crypto.dtypes)
+print(df_crypto.head())
+
 # 📊 **Multi-Tab Navigation mit Kategorien**
 tab_home, tab_top, tab_new, tab_meme, tab_other = st.tabs([
     "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins"
