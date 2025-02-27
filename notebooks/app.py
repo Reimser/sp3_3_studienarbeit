@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
-import gdown
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
 import ast
+import requests
 
 # 📌 Streamlit Page Configuration
 st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
@@ -23,16 +23,18 @@ CRYPTO_PRICES_CSV_ID = "11k9wiflOkqg2DayEgn7iPqNPHC5Qatht"
 MERGED_CRYPTO_CSV = "reddit_merged.csv"
 CRYPTO_PRICES_CSV = "crypto_prices.csv"
 
-# 🔹 Sicherstellen, dass die aktuelle CSV geladen wird
+# 🔹 Funktion zum Herunterladen von CSV-Dateien
 def download_csv(file_id, output):
-    """Lädt eine CSV-Datei von Google Drive herunter"""
-    url = f"https://drive.google.com/uc?id={file_id}"
-    try:
-        gdown.download(url, output, quiet=False)
-        if not os.path.exists(output) or os.path.getsize(output) == 0:
-            st.error(f"❌ Fehler: {output} wurde nicht korrekt heruntergeladen!")
-    except Exception as e:
-        st.error(f"❌ Download fehlgeschlagen: {str(e)}")
+    """Lädt eine CSV-Datei von Google Drive herunter (Alternative zu gdown)"""
+    url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    
+    response = requests.get(url, stream=True)
+    if response.status_code == 200:
+        with open(output, "wb") as f:
+            f.write(response.content)
+        print(f"✅ Datei {output} erfolgreich heruntergeladen!")
+    else:
+        st.error(f"❌ Fehler beim Download von {output}: {response.status_code}")
 
 # 📥 **Dateien von Google Drive herunterladen**
 if os.path.exists(MERGED_CRYPTO_CSV):
@@ -107,7 +109,6 @@ df_prices = clean_price_data(df_prices)
 print(f"📌 Überprüfte Spalten:")
 print(df_crypto.dtypes)
 print(df_crypto.head())
-
 
 print("🔍 Verfügbare Kryptowährungen im Datensatz:", df_crypto["crypto"].unique())
 
