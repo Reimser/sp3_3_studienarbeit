@@ -4,9 +4,9 @@ import gdown
 import os
 
 # 📌 Streamlit Page Configuration
-st.set_page_config(page_title="Reddit Data Import", layout="centered")
+st.set_page_config(page_title="Reddit Data Analysis", layout="wide")
 
-# 🚀 **Cache wirklich zurücksetzen**
+# 🚀 **Cache zurücksetzen**
 st.cache_data.clear()
 st.cache_resource.clear()
 
@@ -18,7 +18,7 @@ CRYPTO_PRICES_CSV_ID = "11k9wiflOkqg2DayEgn7iPqNPHC5Qatht"
 MERGED_CRYPTO_CSV = "reddit_merged.csv"
 CRYPTO_PRICES_CSV = "crypto_prices.csv"
 
-# 🔹 **Download CSV-Dateien von Google Drive**
+# 🔹 **Download CSV-Dateien**
 def download_csv(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     try:
@@ -29,7 +29,7 @@ def download_csv(file_id, output):
         st.error(f"❌ Download fehlgeschlagen: {str(e)}")
 
 # 🔥 **Daten laden**
-st.write("📥 **Daten werden geladen...**")
+st.sidebar.write("📥 **Daten werden geladen...**")
 
 # Datei-Download
 download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
@@ -49,12 +49,50 @@ def load_csv(filepath):
 df_crypto = load_csv(MERGED_CRYPTO_CSV)
 df_prices = load_csv(CRYPTO_PRICES_CSV)
 
-# **Erste Datenprüfung**
-st.write("📌 **Importierte Datenstruktur:**")
-st.write("🔹 **reddit_merged.csv**")
-st.write(df_crypto.head())
+# 🔍 **Daten-Übersicht**
+st.title("📊 Reddit Krypto-Datenanalyse")
+st.subheader("📌 Datenübersicht")
 
-st.write("🔹 **crypto_prices.csv**")
-st.write(df_prices.head())
+col1, col2 = st.columns(2)
 
-st.write("✅ **Datenimport abgeschlossen!**")
+with col1:
+    st.write("### 🔹 reddit_merged.csv")
+    st.write(f"✅ **{df_crypto.shape[0]:,}** Einträge | **{df_crypto.shape[1]}** Spalten")
+    st.write(df_crypto.head())
+
+with col2:
+    st.write("### 🔹 crypto_prices.csv")
+    st.write(f"✅ **{df_prices.shape[0]:,}** Einträge | **{df_prices.shape[1]}** Spalten")
+    st.write(df_prices.head())
+
+# 🔍 **Fehlende Werte analysieren**
+st.subheader("❌ Fehlende Werte in den Daten")
+
+missing_crypto = df_crypto.isnull().sum()
+missing_prices = df_prices.isnull().sum()
+
+col1, col2 = st.columns(2)
+with col1:
+    st.write("🔹 **Fehlende Werte in reddit_merged.csv**")
+    st.write(missing_crypto[missing_crypto > 0])
+
+with col2:
+    st.write("🔹 **Fehlende Werte in crypto_prices.csv**")
+    st.write(missing_prices[missing_prices > 0])
+
+# 📊 **Datenverteilung**
+st.subheader("📊 Verteilung wichtiger Spalten")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.write("**📌 Häufigste Kryptowährungen in reddit_merged.csv**")
+    crypto_counts = df_crypto["crypto"].value_counts().head(10)
+    st.bar_chart(crypto_counts)
+
+with col2:
+    st.write("**📌 Sentiment-Verteilung in reddit_merged.csv**")
+    sentiment_counts = df_crypto["sentiment"].value_counts()
+    st.bar_chart(sentiment_counts)
+
+st.success("✅ **Analyse abgeschlossen!**")
