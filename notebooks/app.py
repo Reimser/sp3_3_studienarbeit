@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # 📌 Streamlit Page Configuration
-st.set_page_config(page_title="Reddit Crypto Sentiment Dashboard", layout="wide")
+st.set_page_config(page_title="Reddit Crypto Dashboard", layout="wide")
 
 # 📥 **Google Drive File IDs**
 MERGED_CRYPTO_CSV_ID = "127YXOmbF5V6KEPu8tzzrSRY3T8Pe68an"
