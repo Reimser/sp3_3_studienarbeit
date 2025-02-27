@@ -16,7 +16,7 @@ st.cache_data.clear()
 st.cache_resource.clear()
 
 # 📌 Google Drive File IDs für die Datensätze
-MERGED_CRYPTO_CSV_ID = "120hADtcM60ugvbFq5-ZcZNlExEpdtAUb"
+MERGED_CRYPTO_CSV_ID = "127YXOmbF5V6KEPu8tzzrSRY3T8Pe68an"
 CRYPTO_PRICES_CSV_ID = "11k9wiflOkqg2DayEgn7iPqNPHC5Qatht"
 
 # 📌 Lokale Dateinamen
