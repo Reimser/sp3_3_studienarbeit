@@ -14,6 +14,7 @@ st.set_page_config(page_title="Reddit Data Dashboard", layout="centered")
 # 🚀 **Cache wirklich zurücksetzen**
 st.cache_data.clear()
 st.cache_resource.clear()
+st.rerun()
 
 # 📌 Google Drive File IDs für die Datensätze
 MERGED_CRYPTO_CSV_ID = "127YXOmbF5V6KEPu8tzzrSRY3T8Pe68an"
