@@ -9,7 +9,7 @@ import seaborn as sns
 st.set_page_config(page_title="Reddit Crypto Dashboard", layout="wide")
 
 # 📥 **Google Drive File IDs**
-MERGED_CRYPTO_CSV_ID = "127YXOmbF5V6KEPu8tzzrSRY3T8Pe68an"
+MERGED_CRYPTO_CSV_ID = "12erlPOoKQS5jgB0Qh74uY3cuY3adAz6r"
 CRYPTO_PRICES_CSV_ID = "11k9wiflOkqg2DayEgn7iPqNPHC5Qatht"
 
 # 📌 **Lokale Dateinamen**
