@@ -18,9 +18,9 @@ CRYPTO_PRICES_CSV = "crypto_prices.csv"
 
 # 🔥 **Daten herunterladen**
 def download_csv(file_id, output):
-    url = f"https://drive.google.com/uc?id={file_id}"
+    url = f"https://drive.google.com/uc?export=download&id={file_id}"
     try:
-        gdown.download(url, output, quiet=False)
+        gdown.download(url, output, quiet=False, fuzzy=True)  # ✅ Alternative Download-Methode
         if not os.path.exists(output) or os.path.getsize(output) == 0:
             st.error(f"❌ Fehler: {output} wurde nicht korrekt heruntergeladen!")
     except Exception as e:
@@ -31,25 +31,35 @@ download_csv(MERGED_CRYPTO_CSV_ID, MERGED_CRYPTO_CSV)
 download_csv(CRYPTO_PRICES_CSV_ID, CRYPTO_PRICES_CSV)
 
 # 📌 **CSV-Dateien einlesen**
-@st.cache_data
 def load_csv(filepath):
     if not os.path.exists(filepath):
         st.error(f"❌ Datei nicht gefunden: {filepath}")
         return pd.DataFrame()
-    return pd.read_csv(filepath, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
+    try:
+        return pd.read_csv(filepath, sep="|", encoding="utf-8-sig", on_bad_lines="skip")
+    except Exception as e:
+        st.error(f"❌ Fehler beim Laden von {filepath}: {str(e)}")
+        return pd.DataFrame()
 
 df_crypto = load_csv(MERGED_CRYPTO_CSV)
 df_prices = load_csv(CRYPTO_PRICES_CSV)
 
+# 📌 **Debugging: Dateiinhalt prüfen**
+if df_crypto.empty:
+    st.error("❌ Die CSV-Datei ist leer oder fehlerhaft!")
+
+st.write("✅ CSV-Datei erfolgreich geladen:")
+st.write(df_crypto.head())
+
 # 🔹 Datentypen korrigieren
 df_crypto["date"] = pd.to_datetime(df_crypto["date"], format="%Y-%m-%d", errors="coerce")
-
 df_crypto["crypto"] = df_crypto["crypto"].astype(str)
 df_crypto["sentiment"] = df_crypto["sentiment"].astype(str)
 
 # 🔍 Debugging: Dtypes prüfen
 print(df_crypto.dtypes)
 print(df_crypto.head())
+
 
 # 📊 **Multi-Tab Navigation mit Kategorien**
 tab_home, tab_top, tab_new, tab_meme, tab_other = st.tabs([
