@@ -62,8 +62,8 @@ print(df_crypto.head())
 
 
 # 📊 **Multi-Tab Navigation mit Kategorien**
-tab_home, tab_top, tab_new, tab_meme, tab_other = st.tabs([
-    "🏠 Home", "🏆 Top Coins", "📈 New Coins", "😂 Meme Coins", "⚡ Weitere Coins"
+tab_home, tab_top, tab_new = st.tabs([
+    "🏠 Home", "🏆 Top Coins", "📈 New Coins"
 ])
 
 # 🔹 **🏠 HOME (README)**
@@ -99,12 +99,33 @@ def crypto_analysis_tab(tab, category, crypto_list):
         # 📊 **1️⃣ Erwähnungen pro Crypto**
         st.subheader("🔥 Most Mentioned Cryptocurrencies")
         crypto_counts = df_filtered["crypto"].value_counts()
-        st.bar_chart(crypto_counts)
 
-        # 📊 **2️⃣ Sentiment-Trend über die Zeit**
+        if not crypto_counts.empty:
+            st.bar_chart(crypto_counts)
+        else:
+            st.warning("⚠️ Keine Erwähnungen verfügbar.")
+
+        # 📊 **2️⃣ Sentiment-Verteilung**
+        st.subheader("😊 Sentiment Distribution")
+        sentiment_counts = df_filtered["sentiment"].value_counts()
+
+        if not sentiment_counts.empty:
+            st.bar_chart(sentiment_counts)
+        else:
+            st.warning("⚠️ Keine Sentiment-Daten verfügbar.")
+
+        # 📊 **3️⃣ Sentiment-Trend über die Zeit**
         st.subheader("📅 Sentiment Trend Over Time")
-        sentiment_trend = df_filtered.groupby(["date", "crypto", "sentiment"]).size().unstack(fill_value=0)
-        st.line_chart(sentiment_trend)
+        if "date" in df_filtered.columns and not df_filtered.empty:
+            sentiment_trend = df_filtered.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
+            if not sentiment_trend.empty:
+                st.line_chart(sentiment_trend)
+            else:
+                st.warning("⚠️ Keine Zeitreihendaten verfügbar.")
+        else:
+            st.warning("⚠️ Spalte 'date' nicht gefunden oder keine Daten verfügbar.")
+
+
 
 # 🔹 **Tab für jede Krypto-Kategorie**
 top_coins = [
