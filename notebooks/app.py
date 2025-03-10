@@ -82,7 +82,7 @@ with tab_home:
         🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
     """)
 
-# 📊 **Tabs für verschiedene Krypto-Kategorien**
+# 📊 **Funktion für die Tabs mit mehreren individuellen Krypto-Auswahlen**
 def crypto_analysis_tab(tab, category, crypto_list):
     with tab:
         st.title(f"{category} Sentiment & Mentions")
@@ -91,61 +91,67 @@ def crypto_analysis_tab(tab, category, crypto_list):
         available_cryptos = df_crypto["crypto"].dropna().unique().tolist()
         print(f"🔍 Verfügbare Kryptowährungen im Datensatz: {available_cryptos}")
 
-        selected_crypto = st.selectbox(
-            f"Choose a {category} Coin:", crypto_list, key=f"{category.lower()}_crypto"
-        )
-
-        # 🔹 **Korrekte Filterung basierend auf dem neuen Datensatz**
-        df_filtered = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto.lower()]
-
-        # 🔍 Debugging: Zeige die ersten Zeilen nach der Filterung
-        print(f"📊 {category} - Verfügbare Daten für {selected_crypto}:")
-        print(df_filtered.head())
-
-        if df_filtered.empty:
-            st.warning(f"⚠️ No data available for {selected_crypto}.")
-            return  # `st.stop()` entfernt, um den Code weiterlaufen zu lassen
-
-        # 🔹 Anzeige der gefilterten Daten
-        st.write(df_filtered)
-
         # 🔹 **1️⃣ Most Discussed Cryptos**
         st.subheader("🔥 Top 10 Most Mentioned Cryptocurrencies")
-        if "crypto" in df_filtered.columns:
-            crypto_counts = df_filtered["crypto"].value_counts().head(10)
+        selected_crypto_mentions = st.selectbox(
+            "Choose a Coin for Mentions Analysis:", crypto_list, key=f"{category.lower()}_mentions"
+        )
+        df_filtered_mentions = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto_mentions.lower()]
+        
+        if not df_filtered_mentions.empty:
+            crypto_counts = df_filtered_mentions["crypto"].value_counts().head(10)
             st.bar_chart(crypto_counts)
         else:
-            st.warning("⚠️ `crypto` column not found. Skipping this section.")
+            st.warning("⚠️ No data available for this selection.")
 
         # 🔹 **2️⃣ Sentiment Distribution per Crypto**
-        st.subheader("💡 Sentiment Distribution of Cryptos")
-        if "sentiment" in df_filtered.columns:
-            sentiment_distribution = df_filtered["sentiment"].value_counts()
+        st.subheader("💡 Sentiment Distribution")
+        selected_crypto_sentiment = st.selectbox(
+            "Choose a Coin for Sentiment Distribution:", crypto_list, key=f"{category.lower()}_sentiment"
+        )
+        df_filtered_sentiment = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto_sentiment.lower()]
+        
+        if not df_filtered_sentiment.empty:
+            sentiment_distribution = df_filtered_sentiment["sentiment"].value_counts()
             st.bar_chart(sentiment_distribution)
         else:
-            st.warning("⚠️ `sentiment` column not found. Skipping this section.")
+            st.warning("⚠️ No data available for this selection.")
 
         # 🔹 **3️⃣ Word Count Over Time**
         st.subheader("📝 Word Count Evolution Over Time")
-        if "date" in df_filtered.columns:
-            wordcount_per_day = df_filtered.groupby("date").size()
+        selected_crypto_wordcount = st.selectbox(
+            "Choose a Coin for Word Count Trend:", crypto_list, key=f"{category.lower()}_wordcount"
+        )
+        df_filtered_wordcount = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto_wordcount.lower()]
+        
+        if not df_filtered_wordcount.empty:
+            wordcount_per_day = df_filtered_wordcount.groupby("date").size()
             st.line_chart(wordcount_per_day)
         else:
-            st.warning("⚠️ `date` column not found. Skipping word count evolution.")
+            st.warning("⚠️ No data available for this selection.")
 
         # 🔹 **4️⃣ Sentiment Trend Over Time**
         st.subheader("📅 Sentiment Trend Over Time")
-        if "sentiment" in df_filtered.columns:
-            sentiment_trend = df_filtered.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
+        selected_crypto_trend = st.selectbox(
+            "Choose a Coin for Sentiment Trend:", crypto_list, key=f"{category.lower()}_trend"
+        )
+        df_filtered_trend = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto_trend.lower()]
+        
+        if not df_filtered_trend.empty:
+            sentiment_trend = df_filtered_trend.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
             st.line_chart(sentiment_trend)
         else:
-            st.warning("⚠️ `sentiment` column not found. Skipping sentiment trends.")
+            st.warning("⚠️ No data available for this selection.")
 
         # 🔹 **5️⃣ Word Count & Price Over Time**
         st.subheader("📊 Word Count & Price Over Time")
-        if selected_crypto in df_prices["crypto"].values:
-            df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto]
-            df_combined_dual = df_filtered.groupby("date").size().reset_index(name="word_count")
+        selected_crypto_price = st.selectbox(
+            "Choose a Coin for Word Count & Price Trend:", crypto_list, key=f"{category.lower()}_price"
+        )
+        
+        if selected_crypto_price in df_prices["crypto"].values:
+            df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_price]
+            df_combined_dual = df_filtered_wordcount.groupby("date").size().reset_index(name="word_count")
             df_combined_dual = df_combined_dual.merge(df_price_filtered, on="date", how="inner")
 
             fig, ax1 = plt.subplots(figsize=(10, 5))
@@ -159,7 +165,7 @@ def crypto_analysis_tab(tab, category, crypto_list):
             ax2.plot(df_combined_dual["date"], df_combined_dual["price"], color="red", label="Price")
             ax2.tick_params(axis="y", labelcolor="red")
 
-            fig.suptitle(f"Word Count & Price for {selected_crypto} Over Time")
+            fig.suptitle(f"Word Count & Price for {selected_crypto_price} Over Time")
             fig.tight_layout()
             st.pyplot(fig)
         else:
@@ -167,24 +173,41 @@ def crypto_analysis_tab(tab, category, crypto_list):
 
         # 🔹 **6️⃣ Sentiment Confidence Boxplot**
         st.subheader("📊 Sentiment Confidence per Cryptocurrency")
-        if "sentiment_confidence" in df_filtered.columns:
+        selected_crypto_confidence = st.selectbox(
+            "Choose a Coin for Sentiment Confidence Analysis:", crypto_list, key=f"{category.lower()}_confidence"
+        )
+        df_filtered_confidence = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto_confidence.lower()]
+
+        if "sentiment_confidence" in df_filtered_confidence.columns and not df_filtered_confidence.empty:
             fig, ax = plt.subplots(figsize=(10, 5))
-            sns.boxplot(x=df_filtered["sentiment_confidence"], ax=ax)
+            sns.boxplot(x=df_filtered_confidence["sentiment_confidence"], ax=ax)
             ax.set_xlabel("Sentiment Confidence Score")
             st.pyplot(fig)
         else:
-            st.warning("⚠️ `sentiment_confidence` column not found. Skipping boxplot.")
+            st.warning("⚠️ No sentiment confidence data available for this crypto.")
 
         # 🔹 **7️⃣ Sentiment Distribution per Crypto (High Confidence)**
         st.subheader("🎯 Sentiment Distribution (High Confidence)")
+        selected_crypto_high_conf = st.selectbox(
+            "Choose a Coin for High-Confidence Sentiment Analysis:", crypto_list, key=f"{category.lower()}_highconf"
+        )
+        df_filtered_high_conf = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto_high_conf.lower()]
         CONFIDENCE_THRESHOLD = 0.8
-        df_high_conf = df_filtered[df_filtered["sentiment_confidence"] >= CONFIDENCE_THRESHOLD]
-        sentiment_dist_high_conf = df_high_conf.groupby(["sentiment"]).size()
-        st.bar_chart(sentiment_dist_high_conf)
+        df_high_conf = df_filtered_high_conf[df_filtered_high_conf["sentiment_confidence"] >= CONFIDENCE_THRESHOLD]
+
+        if not df_high_conf.empty:
+            sentiment_dist_high_conf = df_high_conf.groupby(["sentiment"]).size()
+            st.bar_chart(sentiment_dist_high_conf)
+        else:
+            st.warning("⚠️ No high-confidence sentiment data available for this crypto.")
 
         # 🔹 **8️⃣ High-Confidence Sentiment & Price Over Time**
         st.subheader("📊 High-Confidence Sentiment & Price Over Time")
-        if selected_crypto in df_prices["crypto"].values:
+        selected_crypto_high_conf_price = st.selectbox(
+            "Choose a Coin for High-Confidence Sentiment & Price Trend:", crypto_list, key=f"{category.lower()}_highconf_price"
+        )
+        
+        if selected_crypto_high_conf_price in df_prices["crypto"].values:
             df_high_conf_trend = df_high_conf.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
             df_combined_sentiment_price = df_high_conf_trend.merge(df_price_filtered, on="date", how="inner")
 
@@ -200,11 +223,13 @@ def crypto_analysis_tab(tab, category, crypto_list):
             ax2.plot(df_combined_sentiment_price.index, df_combined_sentiment_price["price"], color="black", label="Price", linewidth=2)
             ax2.tick_params(axis="y", labelcolor="black")
 
-            fig.suptitle(f"High-Confidence Sentiment & Price for {selected_crypto} Over Time")
+            fig.suptitle(f"High-Confidence Sentiment & Price for {selected_crypto_high_conf_price} Over Time")
             fig.tight_layout()
             st.pyplot(fig)
         else:
             st.warning("⚠️ No high-confidence sentiment price data available.")
+
+
 
 
 # 🔹 **Tab für jede Krypto-Kategorie**
