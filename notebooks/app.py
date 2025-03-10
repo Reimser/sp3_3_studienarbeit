@@ -9,11 +9,11 @@ import seaborn as sns
 st.set_page_config(page_title="Reddit Crypto Dashboard", layout="wide")
 
 # 📥 **Google Drive File IDs**
-MERGED_CRYPTO_CSV_ID = "12erlPOoKQS5jgB0Qh74uY3cuY3adAz6r"
+MERGED_CRYPTO_CSV_ID = "12ugApKWh1cJYONcLanpHND9gIdobh-wA"
 CRYPTO_PRICES_CSV_ID = "11k9wiflOkqg2DayEgn7iPqNPHC5Qatht"
 
 # 📌 **Lokale Dateinamen**
-MERGED_CRYPTO_CSV = "reddit_merged.csv"
+MERGED_CRYPTO_CSV = "app.csv"
 CRYPTO_PRICES_CSV = "crypto_prices.csv"
 
 # 🔥 **Daten herunterladen**
@@ -107,14 +107,14 @@ def crypto_analysis_tab(tab, category, crypto_list):
         st.line_chart(sentiment_trend)
 
 # 🔹 **Tab für jede Krypto-Kategorie**
-top_coins = ["Ethereum", "Wrapped Ethereum", "Solana", "Avalanche", "Polkadot", "Near Protocol", "Polygon", "XRP", "Cardano", "Cronos"]
+top_coins = [
+    "Bitcoin", "Ethereum", "Tether", "Ripple", "Binance Coin", "Solana", 
+    "USD Coin", "Dogecoin", "Cardano", "TRON", "Polygon", "XRP", "Cronos"
+]
 crypto_analysis_tab(tab_top, "Top Coins", top_coins)
 
-new_coins = ["Arbitrum", "Starknet", "Injective Protocol", "Sei Network", "Aptos", "EigenLayer", "Mantle", "Immutable X", "Ondo Finance"]
+new_coins = [
+    "NEAR", "MATIC", "Band", "Optimism", "Celestia", "Numerai", 
+    "Atheir", "Sui", "HZPE", "Litecoin"
+]
 crypto_analysis_tab(tab_new, "New Coins", new_coins)
-
-meme_coins = ["Shiba Inu", "Pepe", "Floki Inu", "Bonk", "Degen", "Toshi", "Fartcoin", "Banana", "Husky"]
-crypto_analysis_tab(tab_meme, "Meme Coins", meme_coins)
-
-other_coins = ["VeChain", "Render", "Kusama", "Hedera", "Filecoin", "Cosmos", "Numerai", "Berachain", "The Sandbox"]
-crypto_analysis_tab(tab_other, "Weitere Coins", other_coins)
