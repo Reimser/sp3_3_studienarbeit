@@ -61,186 +61,228 @@ print(df_crypto.dtypes)
 print(df_crypto.head())
 
 
-# 📊 **Multi-Tab Navigation mit Kategorien**
-tab_home, tab_top, tab_new = st.tabs([
-    "🏠 Home", "🏆 Top Coins", "📈 New Coins"
-])
+# 📊 **Multi-Tab Navigation**
+tab_home, tab_crypto, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💹 Stock Data"])
 
 # 🔹 **🏠 HOME (README)**
 with tab_home:
-    st.title("📊 Reddit Crypto Sentiment Dashboard")
+    st.title("📊 Reddit Financial Sentiment Dashboard")
     st.markdown("""
         ## 🔍 Project Overview
-        This dashboard provides a **data-driven analysis of cryptocurrency sentiment** using **Reddit discussions** and **historical price data**.
+        This dashboard provides a **data-driven analysis of cryptocurrency sentiment** using **Reddit discussions** and **historical price data** starting from November 2024. The project integrates multiple data sources to explore the relationship between social sentiment and market trends.
+
+        ### 📊 **Data Sources & Processing**
+        - **Reddit Comments & Posts:** Scraped weekly from multiple subreddits using a **custom Reddit scraper**.  
+        - **Sentiment Analysis:** Applied **CryptoBERT** for a **bullish-bearish-neutral classification** with confidence scores.  
+        - **Historical Price Data:** Collected from **CoinGecko API** for major cryptocurrencies.  
+        - **Data Storage:** Merged sentiment and price data is stored and updated weekly in **Google Drive**.
 
         ### 🔎 **Key Features**
         - **📈 Crypto Sentiment Analysis:**  
           - Top mentioned cryptocurrencies & sentiment distribution  
           - Sentiment trends over time (overall & high-confidence)  
+          - Word count trends for selected cryptos
           - Combined analysis of sentiment & price dynamics    
+        - **💹 Stock Market Analysis (Coming Soon)**  
 
+        ### 🔄 **Update Frequency**
+        - **Reddit data & sentiment analysis:** Weekly  
+        - **Crypto price data:** Weekly  
+
+        ---
         🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
     """)
 
-# 📊 **Funktion für die Tabs mit mehreren individuellen Krypto-Auswahlen**
-def crypto_analysis_tab(tab, category, crypto_list):
-    with tab:
-        st.title(f"{category} Sentiment & Mentions")
+# 🔹 **📈 CRYPTOCURRENCY ANALYSIS**
+with tab_crypto:
+    st.title("📈 Crypto Sentiment Dashboard")
 
-        # 🔹 Debugging: Alle verfügbaren Kryptowährungen im Datensatz anzeigen
-        available_cryptos = df_crypto["crypto"].dropna().unique().tolist()
-        print(f"🔍 Verfügbare Kryptowährungen im Datensatz: {available_cryptos}")
-
+    if df_crypto.empty:
+        st.warning("⚠️ No Crypto Data Available.")
+    else:
         # 🔹 **1️⃣ Most Discussed Cryptos**
         st.subheader("🔥 Top 10 Most Mentioned Cryptocurrencies")
-        selected_crypto_mentions = st.selectbox(
-            "Choose a Coin for Mentions Analysis:", crypto_list, key=f"{category.lower()}_mentions"
-        )
-        df_filtered_mentions = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto_mentions.lower()]
-        
-        if not df_filtered_mentions.empty:
-            crypto_counts = df_filtered_mentions["crypto"].value_counts().head(10)
-            st.bar_chart(crypto_counts)
-        else:
-            st.warning("⚠️ No data available for this selection.")
+        crypto_counts = df_crypto["crypto"].value_counts().head(10)
+        st.bar_chart(crypto_counts)
 
         # 🔹 **2️⃣ Sentiment Distribution per Crypto**
-        st.subheader("💡 Sentiment Distribution")
-        selected_crypto_sentiment = st.selectbox(
-            "Choose a Coin for Sentiment Distribution:", crypto_list, key=f"{category.lower()}_sentiment"
-        )
-        df_filtered_sentiment = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto_sentiment.lower()]
-        
-        if not df_filtered_sentiment.empty:
-            sentiment_distribution = df_filtered_sentiment["sentiment"].value_counts()
-            st.bar_chart(sentiment_distribution)
-        else:
-            st.warning("⚠️ No data available for this selection.")
+        st.subheader("💡 Sentiment Distribution of Cryptos")
+        sentiment_distribution = df_crypto.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
+        st.bar_chart(sentiment_distribution)
 
-        # 🔹 **3️⃣ Word Count Over Time**
+
+        # **Word Count Over Time**
         st.subheader("📝 Word Count Evolution Over Time")
-        selected_crypto_wordcount = st.selectbox(
-            "Choose a Coin for Word Count Trend:", crypto_list, key=f"{category.lower()}_wordcount"
+
+        # Multi-Select für mehrere Kryptowährungen
+        selected_cryptos_wordcount = st.multiselect(
+            "Choose Cryptos to Compare Word Frequency:",
+            df_crypto["crypto"].unique().tolist(),
+            default=df_crypto["crypto"].unique()[:3]
         )
-        df_filtered_wordcount = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto_wordcount.lower()]
-        
-        if not df_filtered_wordcount.empty:
-            wordcount_per_day = df_filtered_wordcount.groupby("date").size()
+
+        if selected_cryptos_wordcount:
+            df_wordcount_filtered = df_crypto[df_crypto["crypto"].isin(selected_cryptos_wordcount)]
+            wordcount_per_day = df_wordcount_filtered.groupby(["comment_date", "crypto"]).size().unstack(fill_value=0)
             st.line_chart(wordcount_per_day)
-        else:
-            st.warning("⚠️ No data available for this selection.")
 
-        # 🔹 **4️⃣ Sentiment Trend Over Time**
-        st.subheader("📅 Sentiment Trend Over Time")
-        selected_crypto_trend = st.selectbox(
-            "Choose a Coin for Sentiment Trend:", crypto_list, key=f"{category.lower()}_trend"
-        )
-        df_filtered_trend = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto_trend.lower()]
-        
-        if not df_filtered_trend.empty:
-            sentiment_trend = df_filtered_trend.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
-            st.line_chart(sentiment_trend)
-        else:
-            st.warning("⚠️ No data available for this selection.")
 
-        # 🔹 **5️⃣ Word Count & Price Over Time**
+        # 🔹 **3️⃣ Sentiment Trend Over Time (Based on Comments)**
+        st.subheader("📅 Sentiment Trend Over Time (Comments)")
+        crypto_options = df_crypto["crypto"].unique().tolist()
+        selected_crypto = st.selectbox("Choose a Cryptocurrency for Sentiment:", crypto_options, index=0, key="sentiment_crypto")
+
+
+        df_filtered = df_crypto[(df_crypto["crypto"] == selected_crypto) & (df_crypto["sentiment"] != "neutral")]
+
+        if df_filtered.empty:
+            st.warning("⚠️ No sentiment data available for the selected cryptocurrency.")
+        else:
+            df_time = df_filtered.groupby(["comment_date", "sentiment"]).size().unstack(fill_value=0)
+            st.line_chart(df_time)
+
+    # 📊 **2️⃣ Word Count & Price Over Time**
         st.subheader("📊 Word Count & Price Over Time")
-        selected_crypto_price = st.selectbox(
-            "Choose a Coin for Word Count & Price Trend:", crypto_list, key=f"{category.lower()}_price"
-        )
-        
-        if selected_crypto_price in df_prices["crypto"].values:
-            df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_price]
-            df_combined_dual = df_filtered_wordcount.groupby("date").size().reset_index(name="word_count")
-            df_combined_dual = df_combined_dual.merge(df_price_filtered, on="date", how="inner")
 
-            fig, ax1 = plt.subplots(figsize=(10, 5))
-            ax1.set_xlabel("Date")
-            ax1.set_ylabel("Word Count", color="blue")
-            ax1.plot(df_combined_dual["date"], df_combined_dual["word_count"], color="blue", label="Word Count")
-            ax1.tick_params(axis="y", labelcolor="blue")
+        # Auswahl einer Kryptowährung für die kombinierte Analyse
+        selected_crypto_dual = st.selectbox("Choose a Cryptocurrency for Word Count & Price:", df_prices["crypto"].unique(), key="dual_axis_crypto")
 
-            ax2 = ax1.twinx()
-            ax2.set_ylabel("Price (USD)", color="red")
-            ax2.plot(df_combined_dual["date"], df_combined_dual["price"], color="red", label="Price")
-            ax2.tick_params(axis="y", labelcolor="red")
+        # Daten für die gewählte Krypto filtern
+        df_wordcount_filtered = df_crypto[df_crypto["crypto"] == selected_crypto_dual].groupby("comment_date").size().reset_index(name="word_count")
+        df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_dual]
 
-            fig.suptitle(f"Word Count & Price for {selected_crypto_price} Over Time")
-            fig.tight_layout()
-            st.pyplot(fig)
-        else:
-            st.warning("⚠️ No price data available for this crypto.")
+        # Sicherstellen, dass beide DataFrames die gleiche Zeitachse haben
+        df_combined_dual = df_wordcount_filtered.merge(df_price_filtered, left_on="comment_date", right_on="date", how="inner")
 
-        # 🔹 **6️⃣ Sentiment Confidence Boxplot**
+        # Visualisierung mit zwei Y-Achsen
+        fig, ax1 = plt.subplots(figsize=(10, 5))
+
+        # Word Count auf linker Achse
+        ax1.set_xlabel("Date")
+        ax1.set_ylabel("Word Count", color="blue")
+        ax1.plot(df_combined_dual["comment_date"], df_combined_dual["word_count"], color="blue", label="Word Count", alpha=0.7)
+        ax1.tick_params(axis="y", labelcolor="blue")
+
+        # Preis auf rechter Achse
+        ax2 = ax1.twinx()
+        ax2.set_ylabel("Price (USD)", color="red")
+        ax2.plot(df_combined_dual["comment_date"], df_combined_dual["price"], color="red", label="Price", alpha=0.7)
+        ax2.tick_params(axis="y", labelcolor="red")
+
+        # Titel und Legende
+        fig.suptitle(f"Word Count & Price for {selected_crypto_dual} Over Time")
+        fig.tight_layout()
+        st.pyplot(fig)
+
+        # 🔹 **1️⃣ Boxplot: Sentiment Confidence per Crypto**
         st.subheader("📊 Sentiment Confidence per Cryptocurrency")
-        selected_crypto_confidence = st.selectbox(
-            "Choose a Coin for Sentiment Confidence Analysis:", crypto_list, key=f"{category.lower()}_confidence"
-        )
-        df_filtered_confidence = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto_confidence.lower()]
 
-        if "sentiment_confidence" in df_filtered_confidence.columns and not df_filtered_confidence.empty:
-            fig, ax = plt.subplots(figsize=(10, 5))
-            sns.boxplot(x=df_filtered_confidence["sentiment_confidence"], ax=ax)
-            ax.set_xlabel("Sentiment Confidence Score")
-            st.pyplot(fig)
-        else:
-            st.warning("⚠️ No sentiment confidence data available for this crypto.")
+        fig, ax = plt.subplots(figsize=(10, 5))
+        sns.boxplot(x="crypto", y="sentiment_confidence", data=df_crypto, ax=ax)
+        ax.set_ylabel("Sentiment Confidence Score")
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45)  # Drehe Labels für bessere Lesbarkeit
+        st.pyplot(fig)
 
-        # 🔹 **7️⃣ Sentiment Distribution per Crypto (High Confidence)**
-        st.subheader("🎯 Sentiment Distribution (High Confidence)")
-        selected_crypto_high_conf = st.selectbox(
-            "Choose a Coin for High-Confidence Sentiment Analysis:", crypto_list, key=f"{category.lower()}_highconf"
-        )
-        df_filtered_high_conf = df_crypto[df_crypto["crypto"].str.lower() == selected_crypto_high_conf.lower()]
+       # 🔹 **Filtered Sentiment Distribution per Crypto (Only High Confidence)**
+        st.subheader("🎯 Sentiment Distribution per Crypto (Only High Confidence)")
+
+        # Wähle einen Confidence-Threshold (z. B. 0.8)
         CONFIDENCE_THRESHOLD = 0.8
-        df_high_conf = df_filtered_high_conf[df_filtered_high_conf["sentiment_confidence"] >= CONFIDENCE_THRESHOLD]
 
-        if not df_high_conf.empty:
-            sentiment_dist_high_conf = df_high_conf.groupby(["sentiment"]).size()
-            st.bar_chart(sentiment_dist_high_conf)
-        else:
-            st.warning("⚠️ No high-confidence sentiment data available for this crypto.")
+        # Filtere nur Bullish & Bearish Sentiments mit hoher Confidence
+        df_high_conf = df_crypto[
+            (df_crypto["sentiment"].isin(["bullish", "bearish"])) & 
+            (df_crypto["sentiment_confidence"] >= CONFIDENCE_THRESHOLD)
+        ]
 
-        # 🔹 **8️⃣ High-Confidence Sentiment & Price Over Time**
-        st.subheader("📊 High-Confidence Sentiment & Price Over Time")
-        selected_crypto_high_conf_price = st.selectbox(
-            "Choose a Coin for High-Confidence Sentiment & Price Trend:", crypto_list, key=f"{category.lower()}_highconf_price"
+        # Gruppiere nach Crypto & Sentiment
+        sentiment_dist_high_conf = df_high_conf.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
+
+        # Bar Chart in Streamlit
+        st.bar_chart(sentiment_dist_high_conf)
+
+
+        # 🔹 **3️⃣ Sentiment Trend Over Time (High Confidence Only)**
+        st.subheader("📅 Sentiment Trend Over Time (Only High Confidence)")
+
+        # Wähle einen Confidence-Threshold (z. B. 0.8)
+        CONFIDENCE_THRESHOLD = 0.8
+
+        # Auswahl der Kryptowährung
+        crypto_options = df_crypto["crypto"].unique().tolist()
+        selected_crypto = st.selectbox(
+            "Choose a Cryptocurrency for High Confidence Sentiment:",
+            crypto_options,
+            index=0,
+            key="sentiment_crypto_high_conf"
         )
-        
-        if selected_crypto_high_conf_price in df_prices["crypto"].values:
-            df_high_conf_trend = df_high_conf.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
-            df_combined_sentiment_price = df_high_conf_trend.merge(df_price_filtered, on="date", how="inner")
 
-            fig, ax1 = plt.subplots(figsize=(10, 5))
-            ax1.set_xlabel("Date")
-            ax1.set_ylabel("Sentiment Count (High Confidence)", color="blue")
-            ax1.plot(df_combined_sentiment_price.index, df_combined_sentiment_price["bullish"], color="green", label="Bullish (High Confidence)")
-            ax1.plot(df_combined_sentiment_price.index, df_combined_sentiment_price["bearish"], color="red", label="Bearish (High Confidence)")
-            ax1.tick_params(axis="y", labelcolor="blue")
+        # Filtere nur bullish & bearish Sentiments mit hoher Confidence
+        df_filtered_high_conf = df_crypto[
+            (df_crypto["crypto"] == selected_crypto) &
+            (df_crypto["sentiment"].isin(["bullish", "bearish"])) &
+            (df_crypto["sentiment_confidence"] >= CONFIDENCE_THRESHOLD)
+        ]
 
-            ax2 = ax1.twinx()
-            ax2.set_ylabel("Price (USD)", color="black")
-            ax2.plot(df_combined_sentiment_price.index, df_combined_sentiment_price["price"], color="black", label="Price", linewidth=2)
-            ax2.tick_params(axis="y", labelcolor="black")
-
-            fig.suptitle(f"High-Confidence Sentiment & Price for {selected_crypto_high_conf_price} Over Time")
-            fig.tight_layout()
-            st.pyplot(fig)
+        if df_filtered_high_conf.empty:
+            st.warning("⚠️ No high-confidence sentiment data available for the selected cryptocurrency.")
         else:
-            st.warning("⚠️ No high-confidence sentiment price data available.")
+            df_time_high_conf = df_filtered_high_conf.groupby(["comment_date", "sentiment"]).size().unstack(fill_value=0)
+            st.line_chart(df_time_high_conf)
 
+        # 📊 **3️⃣ High-Confidence Sentiment & Price Over Time**
+        st.subheader("📊 High-Confidence Sentiment & Price Over Time")
 
+        # Auswahl einer Kryptowährung für die kombinierte Analyse
+        selected_crypto_sentiment_price = st.selectbox(
+            "Choose a Cryptocurrency for High-Confidence Sentiment & Price:",
+            df_prices["crypto"].unique(),
+            key="sentiment_price_dual"
+        )
 
+        # 🔹 Daten für die gewählte Krypto filtern (nur bullish & bearish mit hoher Confidence)
+        df_sentiment_high_conf_filtered = df_crypto[
+            (df_crypto["crypto"] == selected_crypto_sentiment_price) &
+            (df_crypto["sentiment"].isin(["bullish", "bearish"])) &
+            (df_crypto["sentiment_confidence"] >= CONFIDENCE_THRESHOLD)
+        ].groupby(["comment_date", "sentiment"]).size().unstack(fill_value=0).reset_index()
 
-# 🔹 **Tab für jede Krypto-Kategorie**
-top_coins = [
-    "Bitcoin", "Ethereum", "Tether", "Ripple", "Binance Coin", "Solana", 
-    "USD Coin", "Dogecoin", "Cardano", "TRON", "Polygon", "XRP", "Cronos"
-]
-crypto_analysis_tab(tab_top, "Top Coins", top_coins)
+        # 🔹 Preisdaten für dieselbe Krypto filtern
+        df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_sentiment_price]
 
-new_coins = [
-    "NEAR", "MATIC", "Band", "Optimism", "Celestia", "Numerai", 
-    "Atheir", "Sui", "HZPE", "Litecoin"
-]
-crypto_analysis_tab(tab_new, "New Coins", new_coins)
+        # 🔹 Sicherstellen, dass beide DataFrames die gleiche Zeitachse haben
+        df_combined_sentiment_price = df_sentiment_high_conf_filtered.merge(
+            df_price_filtered, left_on="comment_date", right_on="date", how="inner"
+        )
+
+        # 🔹 Visualisierung mit zwei Y-Achsen
+        fig, ax1 = plt.subplots(figsize=(10, 5))
+
+        # Sentiment-Trends auf linker Achse
+        ax1.set_xlabel("Date")
+        ax1.set_ylabel("High-Confidence Sentiment Count", color="blue")
+        ax1.plot(df_combined_sentiment_price["comment_date"], df_combined_sentiment_price["bullish"], 
+                color="green", label="Bullish (High Confidence)", alpha=0.7)
+        ax1.plot(df_combined_sentiment_price["comment_date"], df_combined_sentiment_price["bearish"], 
+                color="red", label="Bearish (High Confidence)", alpha=0.7)
+        ax1.tick_params(axis="y", labelcolor="blue")
+        ax1.legend(loc="upper left")
+
+        # Preis auf rechter Achse
+        ax2 = ax1.twinx()
+        ax2.set_ylabel("Price (USD)", color="black")
+        ax2.plot(df_combined_sentiment_price["comment_date"], df_combined_sentiment_price["price"], 
+                color="black", label="Price", linewidth=2)
+        ax2.tick_params(axis="y", labelcolor="black")
+        ax2.legend(loc="upper right")
+
+        # Titel & Layout
+        fig.suptitle(f"High-Confidence Sentiment & Price for {selected_crypto_sentiment_price} Over Time")
+        fig.tight_layout()
+        st.pyplot(fig)
+
+        
+# 🔹 **💹 STOCK MARKET ANALYSIS**
+with tab_stocks:
+    st.title("💹 Stock Market Analysis (Coming Soon)")
+    st.warning("🚧 This section is under development. Stock data will be integrated soon!")
