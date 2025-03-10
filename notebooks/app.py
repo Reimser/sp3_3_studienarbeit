@@ -86,32 +86,41 @@ else:
     else:
         st.warning("⚠️ No sentiment data available.")
 
-    # 🔹 **Word Count & Preis über die Zeit**
-    st.subheader("📊 Word Count & Price Over Time")
-    selected_crypto_dual = st.selectbox("🔍 Select a Crypto for Word Count & Price:", df_prices["crypto"].unique())
+# 🔹 **Word Count & Preis über die Zeit (Dark Mode)**
+st.subheader("🌑📊 Word Count & Price Over Time")
 
-    df_wordcount_filtered = df_crypto[df_crypto["crypto"] == selected_crypto_dual].groupby("date").size().reset_index(name="word_count")
-    df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_dual]
+selected_crypto_dual = st.selectbox("🔍 Select a Crypto for Word Count & Price:", df_prices["crypto"].unique())
 
-    # **Finaler Fix für Merge**
-    df_wordcount_filtered["date"] = pd.to_datetime(df_wordcount_filtered["date"], errors="coerce")
-    df_price_filtered["date"] = pd.to_datetime(df_price_filtered["date"], errors="coerce")
+df_wordcount_filtered = df_crypto[df_crypto["crypto"] == selected_crypto_dual].groupby("date").size().reset_index(name="word_count")
+df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_dual]
 
-    df_combined_dual = df_wordcount_filtered.merge(df_price_filtered, on="date", how="inner")
+# **Finaler Fix für Merge**
+df_wordcount_filtered["date"] = pd.to_datetime(df_wordcount_filtered["date"], errors="coerce")
+df_price_filtered["date"] = pd.to_datetime(df_price_filtered["date"], errors="coerce")
 
-    # **Zwei-Achsen-Plot: Word Count & Price**
-    fig, ax1 = plt.subplots(figsize=(10, 5))
+df_combined_dual = df_wordcount_filtered.merge(df_price_filtered, on="date", how="inner")
 
-    ax1.set_xlabel("Date")
-    ax1.set_ylabel("Word Count", color="blue")
-    ax1.plot(df_combined_dual["date"], df_combined_dual["word_count"], color="blue", label="Word Count", alpha=0.7)
-    ax1.tick_params(axis="y", labelcolor="blue")
+# **Zwei-Achsen-Plot: Dark Mode**
+plt.style.use("dark_background")  # Dark Theme aktivieren
+fig, ax1 = plt.subplots(figsize=(10, 5))
 
-    ax2 = ax1.twinx()
-    ax2.set_ylabel("Price (USD)", color="red")
-    ax2.plot(df_combined_dual["date"], df_combined_dual["price"], color="red", label="Price", alpha=0.7)
-    ax2.tick_params(axis="y", labelcolor="red")
+ax1.set_facecolor("#222222")  # Dunkler Hintergrund
+fig.patch.set_facecolor("#222222")  # Rand-Hintergrund
 
-    fig.suptitle(f"Word Count & Price for {selected_crypto_dual} Over Time")
-    fig.tight_layout()
-    st.pyplot(fig)
+ax1.set_xlabel("Date", color="white")
+ax1.set_ylabel("Word Count", color="cyan")
+ax1.plot(df_combined_dual["date"], df_combined_dual["word_count"], color="cyan", label="Word Count", alpha=0.8, linewidth=2)
+ax1.tick_params(axis="y", labelcolor="cyan")
+ax1.tick_params(axis="x", colors="white")
+ax1.grid(color="#444444", linestyle="--", linewidth=0.5)
+
+ax2 = ax1.twinx()
+ax2.set_ylabel("Price (USD)", color="lightcoral")
+ax2.plot(df_combined_dual["date"], df_combined_dual["price"], color="lightcoral", label="Price", alpha=0.8, linewidth=2)
+ax2.tick_params(axis="y", labelcolor="lightcoral")
+ax2.grid(color="#444444", linestyle="--", linewidth=0.5)
+
+fig.suptitle(f"🌑 Word Count & Price for {selected_crypto_dual} Over Time", color="white")
+fig.tight_layout()
+
+st.pyplot(fig)
