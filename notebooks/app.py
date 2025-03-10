@@ -210,9 +210,9 @@ with tab_crypto:
 
             # **Preis auf rechter Achse**
             ax2 = ax1.twinx()
-            ax2.set_ylabel("Price (USD)", color="lightcoral")
-            ax2.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price["price"], color="lightcoral", label="Price", linewidth=2)
-            ax2.tick_params(axis="y", labelcolor="lightcoral")
+            ax2.set_ylabel("Price (USD)", color="white")
+            ax2.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price["price"], color="white", label="Price", linewidth=2)
+            ax2.tick_params(axis="y", labelcolor="white")
 
             fig.suptitle(f"🌑 High-Confidence Sentiment & Price for {selected_crypto_sentiment_price}", color="white")
             fig.tight_layout()
