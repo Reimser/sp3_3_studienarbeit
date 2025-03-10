@@ -207,7 +207,6 @@ def crypto_analysis_tab(tab, category, crypto_list):
             st.warning("⚠️ No high-confidence sentiment price data available.")
 
 
-
 # 🔹 **Tab für jede Krypto-Kategorie**
 top_coins = [
     "Bitcoin", "Ethereum", "Tether", "Ripple", "Binance Coin", "Solana", 
