@@ -146,7 +146,21 @@ with tab_crypto:
             (df_crypto["sentiment_confidence"] >= CONFIDENCE_THRESHOLD)
         ]
         sentiment_dist_high_conf = df_high_conf.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
-        st.bar_chart(sentiment_dist_high_conf)
+
+        # **Dunkler Hintergrund für das Diagramm**
+        fig, ax = plt.subplots(figsize=(8, 5))
+        fig.patch.set_facecolor("#0E1117")  # Hintergrund auf Streamlit Dark Mode setzen
+        ax.set_facecolor("#0E1117")
+
+        # Balkendiagramm für Sentiment-Verteilung
+        sentiment_dist_high_conf.plot(kind="bar", ax=ax, color={"bullish": "limegreen", "bearish": "tomato"})
+        ax.set_xlabel("Cryptocurrency", color="white")
+        ax.set_ylabel("Count", color="white")
+        ax.tick_params(axis="x", rotation=45, colors="white")
+        ax.tick_params(axis="y", colors="white")
+        ax.grid(color="#444444", linestyle="--", linewidth=0.5)  # Gitternetzlinien anpassen
+
+        st.pyplot(fig)
 
         # 🔹 **Sentiment-Trend über die Zeit (Hohe Confidence)**
         st.subheader("📅 High-Confidence Sentiment Trend Over Time")
@@ -157,31 +171,52 @@ with tab_crypto:
             st.warning("⚠️ No high-confidence sentiment data available.")
         else:
             df_time_high_conf = df_filtered_high_conf.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
-            st.line_chart(df_time_high_conf)
 
-        # 🔹 **High-Confidence Sentiment & Price Over Time**
-        st.subheader("📊 High-Confidence Sentiment & Price Over Time")
-        selected_crypto_sentiment_price = st.selectbox("🔍 Select a Crypto:", df_prices["crypto"].unique(), key="sentiment_price_dual")
-        df_sentiment_high_conf_filtered = df_high_conf[df_high_conf["crypto"] == selected_crypto_sentiment_price].groupby(["date", "sentiment"]).size().unstack(fill_value=0).reset_index()
-        df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_sentiment_price]
+            # **Dunkler Hintergrund für das Liniendiagramm**
+            fig, ax = plt.subplots(figsize=(8, 5))
+            fig.patch.set_facecolor("#0E1117")
+            ax.set_facecolor("#0E1117")
 
-        df_combined_sentiment_price = df_sentiment_high_conf_filtered.merge(df_price_filtered, on="date", how="inner")
+            df_time_high_conf.plot(ax=ax, color={"bullish": "limegreen", "bearish": "tomato"})
+            ax.set_xlabel("Date", color="white")
+            ax.set_ylabel("Count", color="white")
+            ax.tick_params(axis="x", rotation=45, colors="white")
+            ax.tick_params(axis="y", colors="white")
+            ax.grid(color="#444444", linestyle="--", linewidth=0.5)
 
-        fig, ax1 = plt.subplots(figsize=(10, 5))
-        ax1.set_xlabel("Date")
-        ax1.set_ylabel("High-Confidence Sentiment Count", color="blue")
-        ax1.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price.get("bullish", 0), color="green", label="Bullish", alpha=0.7)
-        ax1.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price.get("bearish", 0), color="red", label="Bearish", alpha=0.7)
-        ax1.tick_params(axis="y", labelcolor="blue")
+            st.pyplot(fig)
 
-        ax2 = ax1.twinx()
-        ax2.set_ylabel("Price (USD)", color="white")
-        ax2.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price["price"], color="white", label="Price", linewidth=2)
-        ax2.tick_params(axis="y", labelcolor="white")
+            # 🔹 **High-Confidence Sentiment & Price Over Time**
+            st.subheader("📊 High-Confidence Sentiment & Price Over Time")
+            selected_crypto_sentiment_price = st.selectbox("🔍 Select a Crypto:", df_prices["crypto"].unique(), key="sentiment_price_dual")
+            df_sentiment_high_conf_filtered = df_high_conf[df_high_conf["crypto"] == selected_crypto_sentiment_price].groupby(["date", "sentiment"]).size().unstack(fill_value=0).reset_index()
+            df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_sentiment_price]
 
-        fig.suptitle(f"High-Confidence Sentiment & Price for {selected_crypto_sentiment_price}")
-        fig.tight_layout()
-        st.pyplot(fig)
+            df_combined_sentiment_price = df_sentiment_high_conf_filtered.merge(df_price_filtered, on="date", how="inner")
+
+            # **Doppelskala-Diagramm für Sentiment & Preis**
+            fig, ax1 = plt.subplots(figsize=(10, 5))
+            fig.patch.set_facecolor("#0E1117")
+            ax1.set_facecolor("#0E1117")
+
+            # **Sentiment-Trends auf linker Achse**
+            ax1.set_xlabel("Date", color="white")
+            ax1.set_ylabel("High-Confidence Sentiment Count", color="cyan")
+            ax1.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price.get("bullish", 0), color="limegreen", label="Bullish", alpha=0.7)
+            ax1.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price.get("bearish", 0), color="tomato", label="Bearish", alpha=0.7)
+            ax1.tick_params(axis="y", labelcolor="cyan")
+            ax1.tick_params(axis="x", colors="white")
+            ax1.grid(color="#444444", linestyle="--", linewidth=0.5)
+
+            # **Preis auf rechter Achse**
+            ax2 = ax1.twinx()
+            ax2.set_ylabel("Price (USD)", color="lightcoral")
+            ax2.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price["price"], color="lightcoral", label="Price", linewidth=2)
+            ax2.tick_params(axis="y", labelcolor="lightcoral")
+
+            fig.suptitle(f"🌑 High-Confidence Sentiment & Price for {selected_crypto_sentiment_price}", color="white")
+            fig.tight_layout()
+            st.pyplot(fig)
 
 # 🔹 **💹 STOCK MARKET ANALYSIS**
 with tab_stocks:
