@@ -138,14 +138,6 @@ with tab_crypto:
 
         st.pyplot(fig)
 
-        # 🔹 **Sentiment Confidence Boxplot**
-        st.subheader("📊 Sentiment Confidence Distribution")
-        fig, ax = plt.subplots(figsize=(10, 5))
-        sns.boxplot(x="crypto", y="sentiment_confidence", data=df_crypto, ax=ax)
-        ax.set_ylabel("Sentiment Confidence Score")
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
-        st.pyplot(fig)
-
         # 🔹 **Sentiment-Verteilung (nur hohe Confidence)**
         st.subheader("🎯 Sentiment Distribution (High Confidence)")
         CONFIDENCE_THRESHOLD = 0.8
@@ -183,14 +175,14 @@ with tab_crypto:
         ax1.tick_params(axis="y", labelcolor="blue")
 
         ax2 = ax1.twinx()
-        ax2.set_ylabel("Price (USD)", color="black")
-        ax2.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price["price"], color="black", label="Price", linewidth=2)
-        ax2.tick_params(axis="y", labelcolor="black")
+        ax2.set_ylabel("Price (USD)", color="white")
+        ax2.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price["price"], color="white", label="Price", linewidth=2)
+        ax2.tick_params(axis="y", labelcolor="white")
 
         fig.suptitle(f"High-Confidence Sentiment & Price for {selected_crypto_sentiment_price}")
         fig.tight_layout()
         st.pyplot(fig)
-        
+
 # 🔹 **💹 STOCK MARKET ANALYSIS**
 with tab_stocks:
     st.title("💹 Stock Market Analysis (Coming Soon)")
