@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # 📌 Streamlit Page Config
-st.set_page_config(page_title="Reddit Crypto Dashboard", layout="wide")
+st.set_page_config(page_title="Reddit Financial Sentiment Dashboard", layout="wide")
 
 # 📥 **Google Drive File IDs**
 MERGED_CRYPTO_CSV_ID = "12ugApKWh1cJYONcLanpHND9gIdobh-wA"
@@ -50,77 +50,95 @@ st.write("📊 Datentypen nach Konvertierung:")
 st.write("🔹 df_crypto:", df_crypto.dtypes)
 st.write("🔹 df_prices:", df_prices.dtypes)
 
-# 📈 **DASHBOARD: CRYPTO SENTIMENT ANALYSIS**
-st.title("📊 Crypto Sentiment Dashboard")
+# 📊 **Multi-Tab Navigation**
+tab_home, tab_crypto, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💹 Stock Data"])
 
-if df_crypto.empty:
-    st.warning("⚠️ No Crypto Data Available.")
-else:
-    # 🔹 **Meistdiskutierte Kryptowährungen**
-    st.subheader("🔥 Top 10 Most Mentioned Cryptos")
-    st.bar_chart(df_crypto["crypto"].value_counts().head(10))
+# 🔹 **🏠 HOME (README)**
+with tab_home:
+    st.title("📊 Reddit Financial Sentiment Dashboard")
+    st.markdown("""
+        ## 🔍 Project Overview
+        This dashboard provides a **data-driven analysis of cryptocurrency sentiment** using **Reddit discussions** and **historical price data** starting from November 2024.
 
-    # 🔹 **Sentiment-Verteilung**
-    st.subheader("💡 Sentiment Distribution")
-    sentiment_distribution = df_crypto.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
-    st.bar_chart(sentiment_distribution)
+        ### 📊 **Data Sources & Processing**
+        - **Reddit Comments & Posts:** Scraped weekly from multiple subreddits using a **custom Reddit scraper**.  
+        - **Sentiment Analysis:** Applied **CryptoBERT** for a **bullish-bearish-neutral classification** with confidence scores.  
+        - **Historical Price Data:** Collected from **CoinGecko API** for major cryptocurrencies.  
+        - **Data Storage:** Merged sentiment and price data is stored and updated weekly in **Google Drive**.
 
-    # 🔹 **Word Count über die Zeit**
-    st.subheader("📝 Word Count Over Time")
-    selected_cryptos = st.multiselect("🔍 Select Cryptos:", df_crypto["crypto"].unique(), default=df_crypto["crypto"].unique()[:3])
-    
-    if selected_cryptos:
-        df_wordcount_filtered = df_crypto[df_crypto["crypto"].isin(selected_cryptos)]
-        wordcount_per_day = df_wordcount_filtered.groupby(["date", "crypto"]).size().unstack(fill_value=0)
-        st.line_chart(wordcount_per_day)
+        ### 🔎 **Key Features**
+        - **📈 Crypto Sentiment Analysis**  
+        - **💹 Stock Market Analysis (Coming Soon)**  
 
-    # 🔹 **Sentiment-Trend über die Zeit**
-    st.subheader("📅 Sentiment Trend Over Time")
-    selected_crypto = st.selectbox("🔍 Select a Crypto for Sentiment Analysis:", df_crypto["crypto"].unique())
+        ---  
+        🔥 **Use the navigation tabs above to explore sentiment trends & price dynamics!**
+    """)
 
-    df_filtered = df_crypto[(df_crypto["crypto"] == selected_crypto) & (df_crypto["sentiment"] != "neutral")]
-    
-    if not df_filtered.empty:
-        df_time = df_filtered.groupby(["date", "sentiment"]).size().unstack(fill_value=0)
-        st.line_chart(df_time)
+# 📈 **CRYPTOCURRENCY SENTIMENT DASHBOARD**
+with tab_crypto:
+    st.title("📊 Crypto Sentiment Dashboard")
+
+    if df_crypto.empty:
+        st.warning("⚠️ No Crypto Data Available.")
     else:
-        st.warning("⚠️ No sentiment data available.")
+        # 🔹 **Meistdiskutierte Kryptowährungen**
+        st.subheader("🔥 Top 10 Most Mentioned Cryptos")
+        st.bar_chart(df_crypto["crypto"].value_counts().head(10))
 
-# 🔹 **Word Count & Preis über die Zeit (Dark Mode)**
-st.subheader("🌑📊 Word Count & Price Over Time")
+        # 🔹 **Sentiment-Verteilung**
+        st.subheader("💡 Sentiment Distribution")
+        sentiment_distribution = df_crypto.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
+        st.bar_chart(sentiment_distribution)
 
-selected_crypto_dual = st.selectbox("🔍 Select a Crypto for Word Count & Price:", df_prices["crypto"].unique())
+        # 🔹 **Word Count über die Zeit**
+        st.subheader("📝 Word Count Over Time")
+        selected_cryptos = st.multiselect("🔍 Select Cryptos:", df_crypto["crypto"].unique(), default=df_crypto["crypto"].unique()[:3])
 
-df_wordcount_filtered = df_crypto[df_crypto["crypto"] == selected_crypto_dual].groupby("date").size().reset_index(name="word_count")
-df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_dual]
+        if selected_cryptos:
+            df_wordcount_filtered = df_crypto[df_crypto["crypto"].isin(selected_cryptos)]
+            wordcount_per_day = df_wordcount_filtered.groupby(["date", "crypto"]).size().unstack(fill_value=0)
+            st.line_chart(wordcount_per_day)
 
-# **Finaler Fix für Merge**
-df_wordcount_filtered["date"] = pd.to_datetime(df_wordcount_filtered["date"], errors="coerce")
-df_price_filtered["date"] = pd.to_datetime(df_price_filtered["date"], errors="coerce")
+        # 🔹 **Word Count & Preis über die Zeit (Dark Mode)**
+        st.subheader("🌑📊 Word Count & Price Over Time")
 
-df_combined_dual = df_wordcount_filtered.merge(df_price_filtered, on="date", how="inner")
+        selected_crypto_dual = st.selectbox("🔍 Select a Crypto for Word Count & Price:", df_prices["crypto"].unique(), key="price_crypto")
 
-# **Zwei-Achsen-Plot: Dark Mode**
-plt.style.use("dark_background")  # Dark Theme aktivieren
-fig, ax1 = plt.subplots(figsize=(10, 5))
+        df_wordcount_filtered = df_crypto[df_crypto["crypto"] == selected_crypto_dual].groupby("date").size().reset_index(name="word_count")
+        df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_dual]
 
-ax1.set_facecolor("#222222")  # Dunkler Hintergrund
-fig.patch.set_facecolor("#222222")  # Rand-Hintergrund
+        # **Finaler Fix für Merge**
+        df_wordcount_filtered["date"] = pd.to_datetime(df_wordcount_filtered["date"], errors="coerce")
+        df_price_filtered["date"] = pd.to_datetime(df_price_filtered["date"], errors="coerce")
 
-ax1.set_xlabel("Date", color="white")
-ax1.set_ylabel("Word Count", color="cyan")
-ax1.plot(df_combined_dual["date"], df_combined_dual["word_count"], color="cyan", label="Word Count", alpha=0.8, linewidth=2)
-ax1.tick_params(axis="y", labelcolor="cyan")
-ax1.tick_params(axis="x", colors="white")
-ax1.grid(color="#444444", linestyle="--", linewidth=0.5)
+        df_combined_dual = df_wordcount_filtered.merge(df_price_filtered, on="date", how="inner")
 
-ax2 = ax1.twinx()
-ax2.set_ylabel("Price (USD)", color="lightcoral")
-ax2.plot(df_combined_dual["date"], df_combined_dual["price"], color="lightcoral", label="Price", alpha=0.8, linewidth=2)
-ax2.tick_params(axis="y", labelcolor="lightcoral")
-ax2.grid(color="#444444", linestyle="--", linewidth=0.5)
+        # **Zwei-Achsen-Plot: Dark Mode**
+        plt.style.use("dark_background")  # Dark Theme aktivieren
+        fig, ax1 = plt.subplots(figsize=(10, 5))
 
-fig.suptitle(f"🌑 Word Count & Price for {selected_crypto_dual} Over Time", color="white")
-fig.tight_layout()
+        ax1.set_facecolor("#222222")  # Dunkler Hintergrund
+        fig.patch.set_facecolor("#222222")  # Rand-Hintergrund
 
-st.pyplot(fig)
+        ax1.set_xlabel("Date", color="white")
+        ax1.set_ylabel("Word Count", color="cyan")
+        ax1.plot(df_combined_dual["date"], df_combined_dual["word_count"], color="cyan", label="Word Count", alpha=0.8, linewidth=2)
+        ax1.tick_params(axis="y", labelcolor="cyan")
+        ax1.tick_params(axis="x", colors="white")
+        ax1.grid(color="#444444", linestyle="--", linewidth=0.5)
+
+        ax2 = ax1.twinx()
+        ax2.set_ylabel("Price (USD)", color="lightcoral")
+        ax2.plot(df_combined_dual["date"], df_combined_dual["price"], color="lightcoral", label="Price", alpha=0.8, linewidth=2)
+        ax2.tick_params(axis="y", labelcolor="lightcoral")
+        ax2.grid(color="#444444", linestyle="--", linewidth=0.5)
+
+        fig.suptitle(f"🌑 Word Count & Price for {selected_crypto_dual} Over Time", color="white")
+        fig.tight_layout()
+
+        st.pyplot(fig)
+
+# 🔹 **💹 STOCK MARKET ANALYSIS**
+with tab_stocks:
+    st.title("💹 Stock Market Analysis (Coming Soon)")
+    st.warning("🚧 This section is under development. Stock data will be integrated soon!")
