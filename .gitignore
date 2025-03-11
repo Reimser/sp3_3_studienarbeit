@@ -74,6 +74,8 @@ docs/_build/
 # Reddit Zugang
 zugang_reddit.env
 
+# Verhindert, dass secrets.toml hochgeladen wird
+.streamlit/secrets.toml
 
 
 # PyBuilder
