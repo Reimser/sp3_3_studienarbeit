@@ -15,7 +15,7 @@ if st.secrets:
 else:
     st.error("❌ `st.secrets` ist leer! 🚨")
 
-# Einzelne Variablen testen
+# Einzelne Variablen testen oder do
 try:
     merged_csv_id = st.secrets["MERGED_CRYPTO_CSV_ID"]
     st.success(f"✅ MERGED_CRYPTO_CSV_ID: {merged_csv_id}")
