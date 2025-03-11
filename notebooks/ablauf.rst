@@ -31,14 +31,14 @@
 +----------------------+
 |  Sentiment Analyse |
 |  - Modell anwenden  |
-|  - Positiv/Negativ  |
+|  - Positiv/Negativ/Neutral  |
 +----------------------+
          │
          ▼
 
 +----------------------+
 |   mergen fuer Analyse  |
-|                        |
+|       (optinoal)       |
 +----------------------+
          │
          ▼
