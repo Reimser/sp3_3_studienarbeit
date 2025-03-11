@@ -112,8 +112,8 @@ with tab_crypto:
         plt.style.use("dark_background")  # Dark Theme aktivieren
         fig, ax1 = plt.subplots(figsize=(10, 5))
 
-        ax1.set_facecolor("#222222")  # Dunkler Hintergrund
-        fig.patch.set_facecolor("#222222")  # Rand-Hintergrund
+        ax1.set_facecolor("#0E1117")  # Dunkler Hintergrund
+        fig.patch.set_facecolor("#0E1117")  # Rand-Hintergrund
 
         ax1.set_xlabel("Date", color="white")
         ax1.set_ylabel("Word Count", color="cyan")
@@ -133,7 +133,7 @@ with tab_crypto:
 
         st.pyplot(fig)
 
-                # 🔹 **Sentiment-Verteilung (nur hohe Confidence) mit Multi-Select**
+        # 🔹 **Sentiment-Verteilung (nur hohe Confidence) mit Multi-Select**
         st.subheader("🎯 Sentiment Distribution (High Confidence)")
 
         CONFIDENCE_THRESHOLD = 0.8
@@ -173,20 +173,6 @@ with tab_crypto:
 
             st.pyplot(fig)
 
-        # **Dunkler Hintergrund für das Diagramm**
-        fig, ax = plt.subplots(figsize=(8, 5))
-        fig.patch.set_facecolor("#0E1117")  # Hintergrund auf Streamlit Dark Mode setzen
-        ax.set_facecolor("#0E1117")
-
-        # Balkendiagramm für Sentiment-Verteilung
-        sentiment_dist_high_conf.plot(kind="bar", ax=ax, color={"bullish": "limegreen", "bearish": "tomato"})
-        ax.set_xlabel("Cryptocurrency", color="white")
-        ax.set_ylabel("Count", color="white")
-        ax.tick_params(axis="x", rotation=45, colors="white")
-        ax.tick_params(axis="y", colors="white")
-        ax.grid(color="#444444", linestyle="--", linewidth=0.5)  # Gitternetzlinien anpassen
-
-        st.pyplot(fig)
 
         # 🔹 **Sentiment-Trend über die Zeit (Hohe Confidence)**
         st.subheader("📅 High-Confidence Sentiment Trend Over Time")
