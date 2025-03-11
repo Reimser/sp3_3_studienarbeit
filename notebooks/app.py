@@ -45,11 +45,6 @@ for df in [df_crypto, df_prices]:
         df["date"] = pd.to_datetime(df["date"], errors="coerce")  # ALLES zu datetime umwandeln
         df.dropna(subset=["date"], inplace=True)  # NaT (NaN-Daten) entfernen
 
-# 📊 **DEBUG: Datentypen ausgeben**
-st.write("📊 Datentypen nach Konvertierung:")
-st.write("🔹 df_crypto:", df_crypto.dtypes)
-st.write("🔹 df_prices:", df_prices.dtypes)
-
 # 📊 **Multi-Tab Navigation**
 tab_home, tab_crypto, tab_stocks = st.tabs(["🏠 Home", "📈 Crypto Data", "💹 Stock Data"])
 
@@ -138,14 +133,45 @@ with tab_crypto:
 
         st.pyplot(fig)
 
-        # 🔹 **Sentiment-Verteilung (nur hohe Confidence)**
+                # 🔹 **Sentiment-Verteilung (nur hohe Confidence) mit Multi-Select**
         st.subheader("🎯 Sentiment Distribution (High Confidence)")
+
         CONFIDENCE_THRESHOLD = 0.8
         df_high_conf = df_crypto[
             (df_crypto["sentiment"].isin(["bullish", "bearish"])) & 
             (df_crypto["sentiment_confidence"] >= CONFIDENCE_THRESHOLD)
         ]
-        sentiment_dist_high_conf = df_high_conf.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
+
+        # **Multi-Select für Crypto-Auswahl**
+        selected_cryptos = st.multiselect(
+            "🔍 Select Cryptos:", 
+            df_high_conf["crypto"].unique().tolist(), 
+            default=df_high_conf["crypto"].unique()[:3]  # Standard: Zeige 3 Cryptos
+        )
+
+        # **Daten filtern**
+        df_filtered = df_high_conf[df_high_conf["crypto"].isin(selected_cryptos)]
+
+        # **Visualisierung nur für gewählte Cryptos**
+        if df_filtered.empty:
+            st.warning("⚠️ No high-confidence sentiment data available for selected cryptos.")
+        else:
+            sentiment_dist_high_conf = df_filtered.groupby(["crypto", "sentiment"]).size().unstack(fill_value=0)
+
+            # **Dark Mode Visualisierung**
+            fig, ax = plt.subplots(figsize=(8, 5))
+            fig.patch.set_facecolor("#0E1117")  # Hintergrund auf Streamlit Dark Mode setzen
+            ax.set_facecolor("#0E1117")
+
+            # Balkendiagramm für Sentiment-Verteilung
+            sentiment_dist_high_conf.plot(kind="bar", ax=ax, color={"bullish": "limegreen", "bearish": "tomato"})
+            ax.set_xlabel("Cryptocurrency", color="white")
+            ax.set_ylabel("Count", color="white")
+            ax.tick_params(axis="x", rotation=45, colors="white")
+            ax.tick_params(axis="y", colors="white")
+            ax.grid(color="#444444", linestyle="--", linewidth=0.5)  # Gitternetzlinien anpassen
+
+            st.pyplot(fig)
 
         # **Dunkler Hintergrund für das Diagramm**
         fig, ax = plt.subplots(figsize=(8, 5))
