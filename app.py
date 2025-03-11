@@ -9,9 +9,8 @@ import seaborn as sns
 st.set_page_config(page_title="Reddit Financial Sentiment Dashboard", layout="wide")
 
 # 📥 **Google Drive File IDs aus den Secrets laden**
-MERGED_CRYPTO_CSV_ID = st.secrets["MERGED_CRYPTO_CSV_ID"]
-CRYPTO_PRICES_CSV_ID = st.secrets["CRYPTO_PRICES_CSV_ID"]
-
+MERGED_CRYPTO_CSV_ID = "12ugApKWh1cJYONcLanpHND9gIdobh-wA"
+CRYPTO_PRICES_CSV_ID = "11k9wiflOkqg2DayEgn7iPqNPHC5Qatht"
 # 📌 **Lokale Dateinamen**
 MERGED_CRYPTO_CSV = "app.csv"
 CRYPTO_PRICES_CSV = "crypto_prices.csv"
