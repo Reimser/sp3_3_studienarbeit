@@ -212,37 +212,37 @@ with tab_crypto:
 
             st.pyplot(fig)
 
-            # 🔹 **High-Confidence Sentiment & Price Over Time**
-            st.subheader("📊 High-Confidence Sentiment & Price Over Time")
-            selected_crypto_sentiment_price = st.selectbox("🔍 Select a Crypto:", df_prices["crypto"].unique(), key="sentiment_price_dual")
-            df_sentiment_high_conf_filtered = df_high_conf[df_high_conf["crypto"] == selected_crypto_sentiment_price].groupby(["date", "sentiment"]).size().unstack(fill_value=0).reset_index()
-            df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_sentiment_price]
+        # 🔹 **High-Confidence Sentiment & Price Over Time**
+        st.subheader("📊 High-Confidence Sentiment & Price Over Time")
+        selected_crypto_sentiment_price = st.selectbox("🔍 Select a Crypto:", df_prices["crypto"].unique(), key="sentiment_price_dual")
+        df_sentiment_high_conf_filtered = df_high_conf[df_high_conf["crypto"] == selected_crypto_sentiment_price].groupby(["date", "sentiment"]).size().unstack(fill_value=0).reset_index()
+        df_price_filtered = df_prices[df_prices["crypto"] == selected_crypto_sentiment_price]
 
-            df_combined_sentiment_price = df_sentiment_high_conf_filtered.merge(df_price_filtered, on="date", how="inner")
+        df_combined_sentiment_price = df_sentiment_high_conf_filtered.merge(df_price_filtered, on="date", how="inner")
 
-            # **Doppelskala-Diagramm für Sentiment & Preis**
-            fig, ax1 = plt.subplots(figsize=(10, 5))
-            fig.patch.set_facecolor("#0E1117")
-            ax1.set_facecolor("#0E1117")
+        # **Doppelskala-Diagramm für Sentiment & Preis**
+        fig, ax1 = plt.subplots(figsize=(10, 5))
+        fig.patch.set_facecolor("#0E1117")
+        ax1.set_facecolor("#0E1117")
 
-            # **Sentiment-Trends auf linker Achse**
-            ax1.set_xlabel("Date", color="white")
-            ax1.set_ylabel("High-Confidence Sentiment Count", color="cyan")
-            ax1.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price.get("bullish", 0), color="limegreen", label="Bullish", alpha=0.7)
-            ax1.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price.get("bearish", 0), color="tomato", label="Bearish", alpha=0.7)
-            ax1.tick_params(axis="y", labelcolor="cyan")
-            ax1.tick_params(axis="x", colors="white")
-            ax1.grid(color="#444444", linestyle="--", linewidth=0.5)
+        # **Sentiment-Trends auf linker Achse**
+        ax1.set_xlabel("Date", color="white")
+        ax1.set_ylabel("High-Confidence Sentiment Count", color="cyan")
+        ax1.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price.get("bullish", 0), color="limegreen", label="Bullish", alpha=0.7)
+        ax1.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price.get("bearish", 0), color="tomato", label="Bearish", alpha=0.7)
+        ax1.tick_params(axis="y", labelcolor="cyan")
+        ax1.tick_params(axis="x", colors="white")
+        ax1.grid(color="#444444", linestyle="--", linewidth=0.5)
 
-            # **Preis auf rechter Achse**
-            ax2 = ax1.twinx()
-            ax2.set_ylabel("Price (USD)", color="white")
-            ax2.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price["price"], color="white", label="Price", linewidth=2)
-            ax2.tick_params(axis="y", labelcolor="white")
+        # **Preis auf rechter Achse**
+        ax2 = ax1.twinx()
+        ax2.set_ylabel("Price (USD)", color="white")
+        ax2.plot(df_combined_sentiment_price["date"], df_combined_sentiment_price["price"], color="white", label="Price", linewidth=2)
+        ax2.tick_params(axis="y", labelcolor="white")
 
-            fig.suptitle(f"🌑 High-Confidence Sentiment & Price for {selected_crypto_sentiment_price}", color="white")
-            fig.tight_layout()
-            st.pyplot(fig)
+        fig.suptitle(f"🌑 High-Confidence Sentiment & Price for {selected_crypto_sentiment_price}", color="white")
+        fig.tight_layout()
+        st.pyplot(fig)
 
 # 🔹 **💹 STOCK MARKET ANALYSIS**
 with tab_stocks:
